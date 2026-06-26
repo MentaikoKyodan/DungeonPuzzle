@@ -32,12 +32,19 @@ public class GoalScript2D : MonoBehaviour
         if (!other.CompareTag(targetTag)) return;
 
         isGoaled = true;
-        HandleGoal();
+        HandleGoal(other);
     }
 
-    private void HandleGoal()
+    private void HandleGoal(Collider2D player)
     {
         Debug.Log("Goal!");
+
+        // プレイヤーの移動を止める（シーン遷移までの間、動けないようにする）
+        PlayerScript movement = player.GetComponent<PlayerScript>();
+        if (movement != null)
+        {
+            movement.enabled = false;
+        }
 
         // SE再生
         if (goalSound != null)
