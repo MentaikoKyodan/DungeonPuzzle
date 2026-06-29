@@ -39,7 +39,7 @@ public class EnemyScript : MonoBehaviour
     [SerializeField] private Color detectColor = Color.blue;
     [Tooltip("センサーの太さ")]
     [SerializeField] private float lineWidth = 0.05f;
-
+    
     private LineRenderer lineRenderer;
 
 
