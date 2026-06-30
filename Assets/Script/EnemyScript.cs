@@ -12,7 +12,7 @@ using UnityEngine;
 public class EnemyScript : MonoBehaviour
 {
     public enum SensorAxis { Right, Up }
-    
+
     [Header("センサー設定")]
     [Tooltip("センサーの「前方」をどちらの軸とするか")]
     [SerializeField] private SensorAxis sensorAxis = SensorAxis.Right;
@@ -36,12 +36,14 @@ public class EnemyScript : MonoBehaviour
     [Tooltip("通常時のセンサー線の色")]
     [SerializeField] private Color idleColor = Color.red;
     [Tooltip("プレイヤーを検知した瞬間の色")]
-    [SerializeField] private Color detectColor = Color.blue;
+    [SerializeField] private Color detectColor = Color.yellow;
     [Tooltip("センサーの太さ")]
     [SerializeField] private float lineWidth = 0.05f;
-    
-    private LineRenderer lineRenderer;
 
+    [Tooltip("センサー線の描画順(小さいほど奥に表示される。ブロックなどのSprite Rendererより小さい値にすること)")]
+    [SerializeField] private int sortingOrder = -1;
+
+    private LineRenderer lineRenderer;
 
     // 前のフレームでプレイヤーを検知していたかどうか(検知の切り替わり判定用)
     private bool wasDetected = false;
@@ -53,28 +55,33 @@ public class EnemyScript : MonoBehaviour
         // プレイヤーまでレイが届かなくなる。
         Physics2D.queriesStartInColliders = false;
 
-        if (showInGameView) 
+        // プロジェクト設定によってはIs TriggerのColliderをRaycastが無視してしまうため、
+        // ここで明示的に「Triggerにも当たる」ようにしておく。
+        // (ブロックなど、Is TriggerがオンのColliderでもセンサーが遮られるようにするため)
+        Physics2D.queriesHitTriggers = true;
+
+        if (showInGameView)
         {
             SetupLineRenderer();
         }
-
     }
 
     private void SetupLineRenderer()
     {
-        lineRenderer=GetComponent<LineRenderer>();
-        if(lineRenderer == null )
+        lineRenderer = GetComponent<LineRenderer>();
+        if (lineRenderer == null)
         {
-            lineRenderer=gameObject.AddComponent<LineRenderer>();
+            lineRenderer = gameObject.AddComponent<LineRenderer>();
         }
 
         lineRenderer.positionCount = 2;
-        lineRenderer.useWorldSpace=true;
+        lineRenderer.useWorldSpace = true;
         lineRenderer.startWidth = lineWidth;
         lineRenderer.endWidth = lineWidth;
-        lineRenderer.material=new Material(Shader.Find("Sprites/Default"));
+        lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
         lineRenderer.startColor = idleColor;
         lineRenderer.endColor = idleColor;
+        lineRenderer.sortingOrder = sortingOrder; // ブロックなどのSpriteより奥に描画されるようにする
     }
 
     //範囲内に入ったらやり直し
@@ -105,11 +112,14 @@ public class EnemyScript : MonoBehaviour
 
         wasDetected = isDetectedNow;
 
-        //Gameビューに表示するセンサー線の位置と色を更新
+        // Gameビューに表示するセンサー線の位置と色を更新
+        // 何か(ブロックなど)に当たっていれば、その地点で線を止める
         if (showInGameView && lineRenderer != null)
         {
             Vector3 start = transform.position;
-            Vector3 end = start + (Vector3)(direction * sensorLength);
+            Vector3 end = hit.collider != null
+                ? (Vector3)hit.point
+                : start + (Vector3)(direction * sensorLength);
 
             lineRenderer.SetPosition(0, start);
             lineRenderer.SetPosition(1, end);
@@ -117,10 +127,8 @@ public class EnemyScript : MonoBehaviour
             Color c = isDetectedNow ? detectColor : idleColor;
             lineRenderer.startColor = c;
             lineRenderer.endColor = c;
-
-        }    
+        }
     }
-
 
     private Vector2 GetSensorDirection()
     {
