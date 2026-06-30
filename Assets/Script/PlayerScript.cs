@@ -14,6 +14,9 @@ public class PlayerScript : MonoBehaviour
     [Tooltip("1マスのサイズ (Tilemapのセルサイズと合わせる)")]
     [SerializeField] private float gridSize = 1f;
 
+    [Tooltip("ブロックのオブジェクトについているタグ")]
+    [SerializeField] private string blockTag = "Block";
+
     private Vector3 targetPosition;
     private Vector3 startPosition;//スタート地点（EnemyScriptなどから戻す際に使用）
 
@@ -48,21 +51,42 @@ public class PlayerScript : MonoBehaviour
         else if (Input.GetKeyDown(KeyCode.A)) dir = Vector3.left;
         else if (Input.GetKeyDown(KeyCode.D)) dir = Vector3.right;
 
-        if (dir != Vector3.zero)
+        if (dir != Vector3.zero) return;
+
+        Vector3 destination = transform.position + dir * gridSize;
+
+        //移動先にブロックがあるかのチェック
+        Collider2D hit = Physics2D.OverlapPoint(destination);
+        if (hit != null && hit.CompareTag(blockTag))
+        {
+            BlockScript block = hit.GetComponent<BlockScript>();
+            if (block != null)
+            {
+                //ブロックを殴る(押す)プレイヤー自身はその場から動かない。
+
+                block.TryPush(dir);
+            }
+            return;
+        }
+        targetPosition = destination;
+        isMoving = true;
+    
+
         {
             // TODO: ここに後で「移動先に殴れるブロックがあるか」「監視範囲かどうか」の判定を入れる
             targetPosition = transform.position + dir * gridSize;
             isMoving = true;
-        }
+      
     }
+}
 
     private void MoveToTarget()
     {
-        transform.position = Vector3.MoveTowards(
-            transform.position,
-            targetPosition,
-            moveSpeed * Time.deltaTime
-        );
+    transform.position = Vector3.MoveTowards(
+        transform.position,
+        targetPosition,
+        moveSpeed * Time.deltaTime
+    );
 
         if ((transform.position - targetPosition).sqrMagnitude < 0.0001f)
         {
