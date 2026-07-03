@@ -12,7 +12,7 @@ using UnityEngine;
 public class EnemyScript : MonoBehaviour
 {
     public enum SensorAxis { Right, Up }
-
+    
     [Header("センサー設定")]
     [Tooltip("センサーの「前方」をどちらの軸とするか")]
     [SerializeField] private SensorAxis sensorAxis = SensorAxis.Right;
@@ -85,6 +85,20 @@ public class EnemyScript : MonoBehaviour
     }
 
     //範囲内に入ったらやり直し
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        if (other == null) return;
+        if (!other.CompareTag(targetTag)) return;
+
+        PlayerScript player = other.GetComponent<PlayerScript>();
+        if (player != null)
+        {
+            // PlayerScript.ResetToStart now expects a Vector3Int parameter.
+            // Convert the player's recorded startPosition (Vector3) to cell coordinates.
+            player.ResetToStart(Vector3Int.RoundToInt(player.startPosition));
+        }
+    }
+    
     //直線のセンサー
     void Start()
     {
@@ -106,7 +120,8 @@ public class EnemyScript : MonoBehaviour
             PlayerScript player = hit.collider.GetComponent<PlayerScript>();
             if (player != null)
             {
-                player.ResetToStart();
+                // Use the player's startPosition converted to cell coordinates
+                player.ResetToStart(Vector3Int.RoundToInt(player.startPosition));
             }
         }
 

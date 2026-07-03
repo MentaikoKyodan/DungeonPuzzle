@@ -19,26 +19,27 @@ public class PlayerScript : MonoBehaviour
     //[SerializeField] private string blockTag = "Block";
 
     private Vector3 targetPosition;
-    private Vector3 startPosition; // スタート地点(EnemyScriptなどから戻す際に使用)
+    public Vector3 startPosition; // スタート地点(EnemyScriptなどから戻す際に使
 
     [SerializeField] private Tilemap targetTilemap; // 対象のタイルマップ
     [SerializeField] private Tilemap wallTilemap; //壁のタイルマップ
     [SerializeField] private float moveSpeed = 5f;    // 移動速度
 
     private Vector3Int currentCell; // 現在のグリッド座標
-    private Vector3 targetWorldPos; // 移動先のワールド座標
+    private Vector3Int startCell; // スタート地点のグリッド座標
+    public Vector3 targetWorldPos; // 移動先のワールド座標
     private bool isMoving = false;  // 移動中かどうかのフラグ
+
 
 
     private void Start()
     {
         // 起動時の位置をグリッドにスナップしておく(エディタ上で半端な位置に置いても安全)
-        //targetPosition = SnapToGrid(transform.position);
-        //transform.position = targetPosition;
-        //startPosition = targetPosition; // スタート地点として記録
+        startPosition = transform.position; // スタート地点として記録
 
         // ゲーム開始時の現在位置をグリッド座標に変換
-        currentCell = targetTilemap.WorldToCell(transform.position);
+        startCell = currentCell = targetTilemap.WorldToCell(transform.position);
+
         // マスの中心のワールド座標を取得して、プレイヤーをピタッと合わせる
         transform.position = targetTilemap.GetCellCenterWorld(currentCell);
     }
@@ -57,17 +58,6 @@ public class PlayerScript : MonoBehaviour
 
     private void HandleInput()
     {
-        //Vector3 dir = Vector3.zero;
-
-        //if (Input.GetKeyDown(KeyCode.W)) dir = Vector3.up;
-        //else if (Input.GetKeyDown(KeyCode.S)) dir = Vector3.down;
-        //else if (Input.GetKeyDown(KeyCode.A)) dir = Vector3.left;
-        //else if (Input.GetKeyDown(KeyCode.D)) dir = Vector3.right;
-
-        //if (dir == Vector3.zero) return;
-
-        //Vector3 destination = transform.position + dir * gridSize;
-        // WASD（または矢印キー）の入力を取得
 
         int moveX = 0;
         int moveY = 0;
@@ -76,21 +66,7 @@ public class PlayerScript : MonoBehaviour
         else if (Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow)) moveX = 1;
         else if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow)) moveY = 1;
         else if (Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.DownArrow)) moveY = -1;
-        // 移動先にブロックがあるかチェック
-        //Collider2D hit = Physics2D.OverlapPoint(destination);
-        //if (hit != null && hit.CompareTag(blockTag))
-        //{
-        //    BlockScript block = hit.GetComponent<BlockScript>();
-        //    if (block != null)
-        //    {
-        //        // ブロックを殴る(押す)。プレイヤー自身はその場から動かない。
-        //        block.TryPush(dir);
-        //    }
-        //    return;
-        //}
 
-        //targetPosition = destination;
-        //isMoving = true;
         // 斜め移動はさせず、上下か左右どちらかの入力があった場合のみ処理
         if (moveX != 0 || moveY != 0)
         {
@@ -122,22 +98,11 @@ public class PlayerScript : MonoBehaviour
         return tile != null;
     }
 
-    // マスの中心へ向かってスムーズに移動させる
-    private void MoveSmoothly()
-    {
-        transform.position = Vector3.MoveTowards(transform.position, targetWorldPos, moveSpeed * Time.deltaTime);
 
-        // 目的のマスにぴったり到着したら移動終了
-        if (Vector3.Distance(transform.position, targetWorldPos) < 0.001f)
-        {
-            transform.position = targetWorldPos;
-            isMoving = false;
-        }
-    }
 
     private void MoveToTarget()
     {
-        transform.position = Vector3.MoveTowards(transform.position,targetWorldPos,moveSpeed * Time.deltaTime);
+        transform.position = Vector3.MoveTowards(transform.position, targetWorldPos, moveSpeed * Time.deltaTime);
 
         if ((transform.position - targetWorldPos).sqrMagnitude < 0.0001f)
         {
@@ -146,6 +111,16 @@ public class PlayerScript : MonoBehaviour
         }
     }
 
+
+    /// 移動を停止し、移動先を指定したワールド座標に設定する。
+    /// 外部から移動を強制的に止めたい場合に使用する。
+    //public void StopMovement(Vector3Int cell)
+    //{
+    //    currentCell = cell;
+    //    targetWorldPos = targetTilemap.GetCellCenterWorld(currentCell);
+    //    isMoving = true;
+    //}
+
     //private Vector3 SnapToGrid(Vector3 pos)
     //{
     //    float x = Mathf.Round(pos.x / gridSize) * gridSize;
@@ -153,16 +128,15 @@ public class PlayerScript : MonoBehaviour
     //    return new Vector3(x, y, pos.z);
     //}
 
-    /// <summary>
-    /// プレイヤーをスタート地点へ戻す(やり直し)。
-    /// 移動中の目標地点(targetPosition)と移動フラグ(isMoving)もリセットすることで、
-    /// 戻した直後に古い目標地点へ動き出してしまうのを防ぐ。
-    /// EnemyScriptのセンサーなど、外部から呼び出す想定。
-    /// </summary>
-    public void ResetToStart()
+
+    //Vector3Int型のNextCellをstartPositionに初期化
+    public void ResetToStart(Vector3Int nextCell)
     {
+        Debug.Log("Resetting player to start position.");
         transform.position = startPosition;
-        targetPosition = startPosition;
-        isMoving = false;
+        targetWorldPos = startPosition;
+        // startPosition (Vector3) を Vector3Int に変換して nextCell に代入
+        //nextCell = Vector3Int.RoundToInt(startPosition);
+        currentCell = startCell;
     }
 }
