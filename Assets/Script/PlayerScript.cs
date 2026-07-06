@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.Tilemaps;
 
 /// <summary>
 /// トップビュー(2D)用のグリッドベース移動コントローラー
@@ -8,44 +7,33 @@ using UnityEngine.Tilemaps;
 /// </summary>
 public class PlayerScript : MonoBehaviour
 {
-    //[Header("移動設定")]
-    //[Tooltip("1マス移動する速さ (units / sec)")]
-    //[SerializeField] private float moveSpeed = 5f;
+    [Header("移動設定")]
+    [Tooltip("1マス移動する速さ (units / sec)")]
+    [SerializeField] private float moveSpeed = 5f;
 
-    //[Tooltip("1マスのサイズ (Tilemapのセルサイズと合わせる)")]
-    //[SerializeField] private float gridSize = 1f;
+    [Tooltip("1マスのサイズ (Tilemapのセルサイズと合わせる)")]
+    [SerializeField] private float gridSize = 1f;
 
-    //[Tooltip("ブロックのオブジェクトについているタグ")]
-    //[SerializeField] private string blockTag = "Block";
+    [Tooltip("ブロックのオブジェクトについているタグ")]
+    [SerializeField] private string blockTag = "Block";
 
     private Vector3 targetPosition;
-    public Vector3 startPosition; // スタート地点(EnemyScriptなどから戻す際に使
+    private Vector3 startPosition;//スタート地点（EnemyScriptなどから戻す際に使用）
 
-    [SerializeField] private Tilemap targetTilemap; // 対象のタイルマップ
-    [SerializeField] private Tilemap wallTilemap; //壁のタイルマップ
-    [SerializeField] private float moveSpeed = 5f;    // 移動速度
+    public Vector3 StartPosition => startPosition; // EnemyScriptなど外部から読み取るための公開プロパティ
 
-    private Vector3Int currentCell; // 現在のグリッド座標
-    private Vector3Int startCell; // スタート地点のグリッド座標
-    public Vector3 targetWorldPos; // 移動先のワールド座標
-    private bool isMoving = false;  // 移動中かどうかのフラグ
-
-
+    private bool isMoving = false;
 
     private void Start()
     {
         // 起動時の位置をグリッドにスナップしておく(エディタ上で半端な位置に置いても安全)
-        startPosition = transform.position; // スタート地点として記録
-
-        // ゲーム開始時の現在位置をグリッド座標に変換
-        startCell = currentCell = targetTilemap.WorldToCell(transform.position);
-
-        // マスの中心のワールド座標を取得して、プレイヤーをピタッと合わせる
-        transform.position = targetTilemap.GetCellCenterWorld(currentCell);
+        targetPosition = SnapToGrid(transform.position);
+        transform.position = targetPosition;
+        startPosition = targetPosition;//スタート地点として記録
     }
 
     private void Update()
-    {// 移動中は新しい入力を受け付けない
+    {
         if (!isMoving)
         {
             HandleInput();
@@ -58,86 +46,81 @@ public class PlayerScript : MonoBehaviour
 
     private void HandleInput()
     {
+        Vector3 dir = Vector3.zero;
 
-        int moveX = 0;
-        int moveY = 0;
+        if (Input.GetKeyDown(KeyCode.W)) dir = Vector3.up;
+        else if (Input.GetKeyDown(KeyCode.S)) dir = Vector3.down;
+        else if (Input.GetKeyDown(KeyCode.A)) dir = Vector3.left;
+        else if (Input.GetKeyDown(KeyCode.D)) dir = Vector3.right;
 
-        if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow)) moveX = -1;
-        else if (Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow)) moveX = 1;
-        else if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow)) moveY = 1;
-        else if (Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.DownArrow)) moveY = -1;
+        if (dir == Vector3.zero) return;
 
-        // 斜め移動はさせず、上下か左右どちらかの入力があった場合のみ処理
-        if (moveX != 0 || moveY != 0)
+        Vector3 destination = transform.position + dir * gridSize;
+
+        // 移動先にブロックがあるかのチェック
+        Collider2D hit = Physics2D.OverlapPoint(destination);
+        if (hit != null && hit.CompareTag(blockTag))
         {
-            Vector3Int nextCell = currentCell + new Vector3Int(moveX, moveY, 0);
-            //移動先のマスに「壁」があるかチェック
-            if (HasWall(nextCell))
+            BlockScript block = hit.GetComponent<BlockScript>();
+            if (block != null)
             {
-                // 壁があったら何もしない（ここに効果音などを入れても良い）
-                Debug.Log("壁があるので進めません！");
-                return;
+                // ブロックを殴る(押す)。プレイヤー自身はその場から動かない。
+                bool pushed = block.TryPush(dir);
+                if (pushed)
+                {
+                    SoundManager.Instance.PlayBlockPush(); // ブロックを押したSE
+                }
             }
-            // 今はそのまま移動を開始する
-            StartMove(nextCell);
+            return;
         }
-    }
-    // 移動の開始処理
-    private void StartMove(Vector3Int nextCell)
-    {
-        currentCell = nextCell;
-        targetWorldPos = targetTilemap.GetCellCenterWorld(currentCell);
+
+        targetPosition = destination;
         isMoving = true;
+        SoundManager.Instance.PlayMove(); // 移動SE
     }
-    private bool HasWall(Vector3Int cellPosition)
-    {
-        // 壁用タイルマップから、指定座標のタイルを取得
-        TileBase tile = wallTilemap.GetTile(cellPosition);
-
-        // タイルが「空っぽではない（＝何か描かれている）」なら壁とみなす
-        return tile != null;
-    }
-
-
 
     private void MoveToTarget()
     {
-        transform.position = Vector3.MoveTowards(transform.position, targetWorldPos, moveSpeed * Time.deltaTime);
+        transform.position = Vector3.MoveTowards(
+            transform.position,
+            targetPosition,
+            moveSpeed * Time.deltaTime
+        );
 
-        if ((transform.position - targetWorldPos).sqrMagnitude < 0.0001f)
+        if ((transform.position - targetPosition).sqrMagnitude < 0.0001f)
         {
-            transform.position = targetWorldPos;
+            transform.position = targetPosition;
             isMoving = false;
         }
     }
 
+    private Vector3 SnapToGrid(Vector3 pos)
+    {
+        float x = Mathf.Round(pos.x / gridSize) * gridSize;
+        float y = Mathf.Round(pos.y / gridSize) * gridSize;
+        return new Vector3(x, y, pos.z);
+    }
 
-    /// 移動を停止し、移動先を指定したワールド座標に設定する。
-    /// 外部から移動を強制的に止めたい場合に使用する。
-    //public void StopMovement(Vector3Int cell)
-    //{
-    //    currentCell = cell;
-    //    targetWorldPos = targetTilemap.GetCellCenterWorld(currentCell);
-    //    isMoving = true;
-    //}
+    /// <summary>
+    /// プレイヤーをスタート地点へ戻す。（やり直し）
+    /// EnemyScriptのセンサーなど、外部から呼び出す想定。
+    /// </summary>
+    public void ResetToStart()
+    {
+        transform.position = startPosition;
+        targetPosition = startPosition;
+        isMoving = false;
+    }
 
-    //private Vector3 SnapToGrid(Vector3 pos)
-    //{
-    //    float x = Mathf.Round(pos.x / gridSize) * gridSize;
-    //    float y = Mathf.Round(pos.y / gridSize) * gridSize;
-    //    return new Vector3(x, y, pos.z);
-    //}
-
-
-
-    //Vector3Int型のNextCellをstartPositionに初期化
+    /// <summary>
+    /// セル座標(Vector3Int)を受け取って、そのセルに対応するワールド座標へリセットする版。
+    /// EnemyScript側がVector3Intを渡してくるためのオーバーロード。
+    /// </summary>
     public void ResetToStart(Vector3Int nextCell)
     {
-        Debug.Log("Resetting player to start position.");
-        transform.position = startPosition;
-        targetWorldPos = startPosition;
-        // startPosition (Vector3) を Vector3Int に変換して nextCell に代入
-        //nextCell = Vector3Int.RoundToInt(startPosition);
-        currentCell = startCell;
+        Vector3 worldPos = new Vector3(nextCell.x * gridSize, nextCell.y * gridSize, transform.position.z);
+        transform.position = worldPos;
+        targetPosition = worldPos;
+        isMoving = false;
     }
 }
