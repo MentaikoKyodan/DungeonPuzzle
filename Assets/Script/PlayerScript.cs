@@ -20,6 +20,8 @@ public class PlayerScript : MonoBehaviour
     private Vector3 targetPosition;
     private Vector3 startPosition;//スタート地点（EnemyScriptなどから戻す際に使用）
 
+    public Vector3 StartPosition => startPosition; // EnemyScriptなど外部から読み取るための公開プロパティ
+
     private bool isMoving = false;
 
     private void Start()
@@ -51,47 +53,39 @@ public class PlayerScript : MonoBehaviour
         else if (Input.GetKeyDown(KeyCode.A)) dir = Vector3.left;
         else if (Input.GetKeyDown(KeyCode.D)) dir = Vector3.right;
 
-        if (dir != Vector3.zero) return;
+        if (dir == Vector3.zero) return;
 
         Vector3 destination = transform.position + dir * gridSize;
 
-        //移動先にブロックがあるかのチェック
+        // 移動先にブロックがあるかのチェック
         Collider2D hit = Physics2D.OverlapPoint(destination);
         if (hit != null && hit.CompareTag(blockTag))
         {
             BlockScript block = hit.GetComponent<BlockScript>();
             if (block != null)
             {
-                //ブロックを殴る(押す)プレイヤー自身はその場から動かない。
-
-                bool pushed=block.TryPush(dir);
-                if(pushed)
+                // ブロックを殴る(押す)。プレイヤー自身はその場から動かない。
+                bool pushed = block.TryPush(dir);
+                if (pushed)
                 {
-                    SoundManager.Instance.PlayBlockPush();//ブロックを押したSE
+                    SoundManager.Instance.PlayBlockPush(); // ブロックを押したSE
                 }
             }
             return;
         }
+
         targetPosition = destination;
         isMoving = true;
-        SoundManager.Instance.PlayBlockPush();
-    
-
-        {
-            // TODO: ここに後で「移動先に殴れるブロックがあるか」「監視範囲かどうか」の判定を入れる
-            targetPosition = transform.position + dir * gridSize;
-            isMoving = true;
-      
+        SoundManager.Instance.PlayMove(); // 移動SE
     }
-}
 
     private void MoveToTarget()
     {
-    transform.position = Vector3.MoveTowards(
-        transform.position,
-        targetPosition,
-        moveSpeed * Time.deltaTime
-    );
+        transform.position = Vector3.MoveTowards(
+            transform.position,
+            targetPosition,
+            moveSpeed * Time.deltaTime
+        );
 
         if ((transform.position - targetPosition).sqrMagnitude < 0.0001f)
         {
@@ -106,17 +100,27 @@ public class PlayerScript : MonoBehaviour
         float y = Mathf.Round(pos.y / gridSize) * gridSize;
         return new Vector3(x, y, pos.z);
     }
+
     /// <summary>
     /// プレイヤーをスタート地点へ戻す。（やり直し）
-    /// 移動中の目標地点（targetPosition)と移動フラグ(isMoving)もリセットすることで、
-    /// 戻した直後に古い目標地点へ動き出してしまうのを防ぐ。
     /// EnemyScriptのセンサーなど、外部から呼び出す想定。
-    /// <summary>
+    /// </summary>
     public void ResetToStart()
     {
         transform.position = startPosition;
         targetPosition = startPosition;
         isMoving = false;
+    }
 
+    /// <summary>
+    /// セル座標(Vector3Int)を受け取って、そのセルに対応するワールド座標へリセットする版。
+    /// EnemyScript側がVector3Intを渡してくるためのオーバーロード。
+    /// </summary>
+    public void ResetToStart(Vector3Int nextCell)
+    {
+        Vector3 worldPos = new Vector3(nextCell.x * gridSize, nextCell.y * gridSize, transform.position.z);
+        transform.position = worldPos;
+        targetPosition = worldPos;
+        isMoving = false;
     }
 }
