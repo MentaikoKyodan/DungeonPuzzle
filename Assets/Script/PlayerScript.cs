@@ -129,6 +129,7 @@ public class PlayerScript : MonoBehaviour
     //}
 
 
+
     //Vector3Int型のNextCellをstartPositionに初期化
     public void ResetToStart(Vector3Int nextCell)
     {
