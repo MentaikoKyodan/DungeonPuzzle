@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Tilemaps;
 
 /// <summary>
 /// プレイヤーに殴られると1マス押される(進む)ブロック。
@@ -14,15 +15,31 @@ public class BlockScript : MonoBehaviour
     [Tooltip("1マス移動する速さ (units / sec)")]
     [SerializeField] private float moveSpeed = 5f;
 
-    [Tooltip("1マスのサイズ (PlayerScriptと同じ値にすること)")]
+    [Tooltip("1マスのサイズ (Tilemap を使わない場合にのみ使用)")]
     [SerializeField] private float gridSize = 1f;
+
+    [Header("Tilemap (任意)")]
+    [Tooltip("Tilemap を設定すると、そのグリッドに合わせて移動します。未設定の場合は gridSize を使用します。")]
+    [SerializeField] private Tilemap tilemap;
+
+    [Tooltip("壁タイルがある Tilemap。移動先にタイルがあると押せません。未設定なら Collider で判定します。")]
+    [SerializeField] private Tilemap wallTilemap;
 
     private Vector3 targetPosition;
     private bool isMoving = false;
 
     private void Start()
     {
-        targetPosition = SnapToGrid(transform.position);
+        // 初期位置をグリッドにスナップ
+        if (tilemap != null)
+        {
+            Vector3Int cell = tilemap.WorldToCell(transform.position);
+            targetPosition = tilemap.GetCellCenterWorld(cell);
+        }
+        else
+        {
+            targetPosition = SnapToGrid(transform.position);
+        }
         transform.position = targetPosition;
     }
 
@@ -51,17 +68,44 @@ public class BlockScript : MonoBehaviour
     public bool TryPush(Vector3 direction)
     {
         if (isMoving) return false; // 自分が移動中は押せない
+        Vector3 destinationWorld;
 
-        Vector3 destination = transform.position + direction * gridSize;
-
-        // 押し先に別のブロックがあるかチェック(壁なども増やすならここにタグを追加)
-        Collider2D hit = Physics2D.OverlapPoint(destination);
-        if (hit != null && hit.gameObject != gameObject && hit.CompareTag("Block"))
+        if (tilemap != null)
         {
-            return false; // 押し先がふさがっているので押せない
+            // 現在セルを取得して、direction の整数オフセットを適用する
+            Vector3Int currentCell = tilemap.WorldToCell(transform.position);
+            Vector3Int offset = new Vector3Int(Mathf.RoundToInt(direction.x), Mathf.RoundToInt(direction.y), 0);
+            Vector3Int destCell = currentCell + offset;
+
+            // 壁タイルがあるかチェック
+            if (wallTilemap != null)
+            {
+                TileBase tile = wallTilemap.GetTile(destCell);
+                if (tile != null) return false; // 壁がある
+            }
+
+            destinationWorld = tilemap.GetCellCenterWorld(destCell);
+
+            // 押し先に別のブロックがあるかチェック
+            Collider2D hit = Physics2D.OverlapPoint(destinationWorld);
+            if (hit != null && hit.gameObject != gameObject && hit.CompareTag("Block"))
+            {
+                return false; // 押し先がふさがっている
+            }
+        }
+        else
+        {
+            // Tilemap 未使用時は従来どおり gridSize を用いる
+            Vector3 destination = transform.position + direction * gridSize;
+            Collider2D hit = Physics2D.OverlapPoint(destination);
+            if (hit != null && hit.gameObject != gameObject && hit.CompareTag("Block"))
+            {
+                return false;
+            }
+            destinationWorld = destination;
         }
 
-        targetPosition = destination;
+        targetPosition = destinationWorld;
         isMoving = true;
         return true;
     }
