@@ -113,15 +113,18 @@ public class EnemyScript : MonoBehaviour
         RaycastHit2D hit = Physics2D.Raycast(origin, direction, sensorLength);
         bool isDetectedNow = hit.collider != null && hit.collider.CompareTag(targetTag);
 
+        if (hit.collider != null)
+            Debug.Log($"Raycastが何かに当たった: {hit.collider.name} / タグ: {hit.collider.tag}");
         // 「検知していない→検知した」に切り替わった瞬間だけ反応する。
         // 時間で制御しないので、プレイヤーが範囲に入るたびに何度でも反応する。
         if (isDetectedNow && !wasDetected)
         {
+            Debug.Log("プレイヤー検知！TriggerDetectionを呼ぶよ");
             PlayerScript player = hit.collider.GetComponent<PlayerScript>();
             if (player != null)
             {
                 // Use the player's startPosition converted to cell coordinates
-                player.ResetToStart(Vector3Int.RoundToInt(player.startPosition));
+                TriggerDetection(player);
             }
         }
 
@@ -142,6 +145,24 @@ public class EnemyScript : MonoBehaviour
             Color c = isDetectedNow ? detectColor : idleColor;
             lineRenderer.startColor = c;
             lineRenderer.endColor = c;
+        }
+    }
+
+    /// <summary>
+    /// 検知時の処理をまとめたメソッド
+    /// ScreenTransitionManagerにプレイヤー位置を渡してゲームオーバー演出を起動する
+    /// </summary>
+    private void TriggerDetection(PlayerScript player)
+    {
+        if (ScreenTransitionManager.Instance != null)
+        {
+            ScreenTransitionManager.Instance.TriggerGameOver(player.transform.position);
+        }
+        else
+        {
+            // ScreenTransitionManagerがシーンにない場合の保険(直接リセット)
+            Debug.LogWarning("ScreenTransitionManagerが見つからなかった。直接リセットするよ");
+            player.ResetToStart(Vector3Int.RoundToInt(player.startPosition));
         }
     }
 
