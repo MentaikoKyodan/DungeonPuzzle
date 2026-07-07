@@ -3834,6 +3834,8 @@ MonoBehaviour:
   flashDuration: 0.4
   flashPeakAlpha: 0.7
   flashPeakTiming: 0.3
+  fadeImage: {fileID: 0}
+  fadeDuration: 1
 --- !u!4 &1776415866
 Transform:
   m_ObjectHideFlags: 0
@@ -3885,10 +3887,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerScript
   startPosition: {x: -6.84, y: 0.63, z: 0}
+  blockLayer:
+    serializedVersion: 2
+    m_Bits: 0
   targetTilemap: {fileID: 678905614}
   wallTilemap: {fileID: 727347858}
   moveSpeed: 5
   targetWorldPos: {x: 0, y: 0, z: 0}
+  blockMover: {fileID: 0}
 --- !u!212 &1797982760
 SpriteRenderer:
   serializedVersion: 2
@@ -4023,7 +4029,7 @@ GameObject:
   - component: {fileID: 1882710581}
   - component: {fileID: 1882710582}
   m_Layer: 0
-  m_Name: Square (1)
+  m_Name: Goal
   m_TagString: Goal
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4043,8 +4049,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GoalScript2D
   targetTag: Player
   loadNextScene: 1
-  nextSceneName: SampleScene
-  loadDelay: 1
+  nextSceneName: StageSelectScene
+  loadDelay: 0.8
   goalSound: {fileID: 0}
   goalEffectPrefab: {fileID: 0}
   goalUI: {fileID: 0}
@@ -4364,10 +4370,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 553a81eaec14e444d95c7392e020002c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BlockScript
+  targetGrid: {fileID: 0}
   moveSpeed: 5
-  gridSize: 1
-  tilemap: {fileID: 678905614}
-  wallTilemap: {fileID: 727347858}
+  obstacleLayer:
+    serializedVersion: 2
+    m_Bits: 0
 --- !u!212 &1988174347
 SpriteRenderer:
   serializedVersion: 2

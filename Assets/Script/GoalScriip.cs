@@ -39,13 +39,6 @@ public class GoalScript2D : MonoBehaviour
     {
         Debug.Log("Goal!");
 
-        // プレイヤーの移動を止める（シーン遷移までの間、動けないようにする）
-        PlayerScript movement = player.GetComponent<PlayerScript>();
-        if (movement != null)
-        {
-            movement.enabled = false;
-        }
-
         // SE再生
         if (goalSound != null)
         {
@@ -67,12 +60,22 @@ public class GoalScript2D : MonoBehaviour
         // シーン遷移
         if (loadNextScene && !string.IsNullOrEmpty(nextSceneName))
         {
-            Invoke(nameof(LoadNextScene), loadDelay);
+            Invoke(nameof(StartTransition), loadDelay);
         }
     }
 
-    private void LoadNextScene()
+    private void StartTransition()
     {
-        SceneManager.LoadScene(nextSceneName);
+        if (ScreenTransitionManager.Instance == null)
+        {
+            Debug.LogWarning("ScreenTransitionManagerが見つからない");
+            return;
+        }
+
+        // プレイヤーの位置を中心にアイリスアウト → nextSceneNameに遷移 → アイリスイン
+        var player = FindFirstObjectByType<PlayerScript>();
+        Vector3 center = player != null ? player.transform.position : transform.position;
+
+        ScreenTransitionManager.Instance.TransitionToScene(nextSceneName, center);
     }
 }

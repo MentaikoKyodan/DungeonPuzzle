@@ -126,6 +126,8 @@ public class StageSelectManager : MonoBehaviour
             return;
         }
 
+        isMoving = true;
+
         ScreenTransitionManager.Instance.TransitionToScene(
             stages[currentIndex].sceneName,
             stageIcon.position
