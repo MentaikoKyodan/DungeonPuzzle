@@ -20,6 +20,7 @@ public class PlayerScript : MonoBehaviour
 
     private Vector3 targetPosition;
     public Vector3 startPosition; // スタート地点(EnemyScriptなどから戻す際に使
+    [SerializeField] private LayerMask blockLayer;
 
     [SerializeField] private Tilemap targetTilemap; // 対象のタイルマップ
     [SerializeField] private Tilemap wallTilemap; //壁のタイルマップ
@@ -29,6 +30,8 @@ public class PlayerScript : MonoBehaviour
     private Vector3Int startCell; // スタート地点のグリッド座標
     public Vector3 targetWorldPos; // 移動先のワールド座標
     private bool isMoving = false;  // 移動中かどうかのフラグ
+    // 移動前のワールド座標（到着後に重なりが発生した場合はここへ戻す）
+    private Vector3 prevWorldPos;
 
     // インスペクター等でブロックの
     [SerializeField] private BlockScript blockMover;
@@ -53,13 +56,18 @@ public class PlayerScript : MonoBehaviour
         {
             HandleInput();
         }
+        else if (Input.GetKeyDown(KeyCode.R))
+        {
+            if (ScreenTransitionManager.Instance != null)
+                ScreenTransitionManager.Instance.TriggerGameOver(transform.position);
+        }
         else
         {
             MoveToTarget();
         }
     }
 
-    
+   
 
     private void HandleInput()
     {
@@ -68,19 +76,24 @@ public class PlayerScript : MonoBehaviour
         {
             return;
         }
+        if (isMoving) return;
 
-        int moveX = 0;
-        int moveY = 0;
-
-        if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow)) moveX = -1;
-        else if (Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow)) moveX = 1;
-        else if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow)) moveY = 1;
-        else if (Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.DownArrow)) moveY = -1;
-
-        // 斜め移動はさせず、上下か左右どちらかの入力があった場合のみ処理
-        if (moveX != 0 || moveY != 0)
+        Vector3Int direction = Vector3Int.zero;
+        if (Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.W)) direction = Vector3Int.up;
+        else if (Input.GetKey(KeyCode.DownArrow) || Input.GetKey(KeyCode.S)) direction = Vector3Int.down;
+        else if (Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.A)) direction = Vector3Int.left;
+        else if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.D)) direction = Vector3Int.right;
+        if (blockMover != null && blockMover.IsMoving)
         {
-            Vector3Int nextCell = currentCell + new Vector3Int(moveX, moveY, 0);
+            return;
+        }
+        // 斜め移動はさせず、上下か左右どちらかの入力があった場合のみ処理
+        if (direction != Vector3Int.zero)
+        {
+            // 移動前の位置を記録しておく
+            prevWorldPos = transform.position;
+
+            Vector3Int nextCell = currentCell + direction;
             //移動先のマスに「壁」があるかチェック
             if (HasWall(nextCell))
             {
@@ -88,10 +101,21 @@ public class PlayerScript : MonoBehaviour
                 Debug.Log("壁があるので進めません！");
                 return;
             }
-            // 今はそのまま移動を開始する
-            StartMove(nextCell);
+            if(IsObstacleAt(targetPosition))
+            {
+                Debug.Log("おおおおおお");
+                return;
+            }
+                // 今はそのまま移動を開始する
+                StartMove(nextCell);
         }
     }
+    public bool IsObstacleAt(Vector3 targetPos)
+    {
+        // 目標地点を中心に、半径0.4mの円の中にブロックがあるかチェック
+        return Physics2D.OverlapCircle(targetPos, 0.1f, blockLayer);
+    }
+
     // 移動の開始処理
     private void StartMove(Vector3Int nextCell)
     {

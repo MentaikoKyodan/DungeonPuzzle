@@ -9,9 +9,10 @@ public class BlockScript : MonoBehaviour
     [SerializeField] private LayerMask obstacleLayer;  // 壁のレイヤー（これに触れると止まる）
 
     private bool isMoving = false;
-
-    // ★プレイヤーのスクリプトから「いまブロック動いてる？」を確認するための窓口
     public bool IsMoving => isMoving;
+
+    
+    
 
     // プレイヤーがコライダー（Is Trigger = ON）に触れている間、毎フレーム呼ばれる
     private void OnTriggerStay2D(Collider2D other)
@@ -47,7 +48,7 @@ public class BlockScript : MonoBehaviour
     }
 
     // 移動先に壁（指定したレイヤー）があるか調べるセンサー
-    private bool IsObstacleAt(Vector3 targetPos)
+    public bool IsObstacleAt(Vector3 targetPos)
     {
         // 目標地点を中心に、半径0.4mの円の中に壁があるかチェック
         return Physics2D.OverlapCircle(targetPos, 0.4f, obstacleLayer);
