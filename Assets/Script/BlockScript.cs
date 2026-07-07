@@ -1,119 +1,77 @@
 using UnityEngine;
-using UnityEngine.Tilemaps;
+using System.Collections;
 
-/// <summary>
-/// プレイヤーに殴られると1マス押される(進む)ブロック。
-/// PlayerScriptと同じグリッド移動方式を使う。
-///
-/// 必須: このオブジェクトにCollider2Dを付けておくこと
-/// (EnemyScriptのセンサーが遮られる判定や、移動先の空き判定に使われる)。
-/// Tagは"Block"にしておくこと(PlayerScript側がこのタグで判定する)。
-/// </summary>
 public class BlockScript : MonoBehaviour
 {
-    [Header("移動設定")]
-    [Tooltip("1マス移動する速さ (units / sec)")]
-    [SerializeField] private float moveSpeed = 5f;
+    [Header("設定関係")]
+    [SerializeField] private Grid targetGrid;          // シーン上のGrid（Tilemapの親）
+    [SerializeField] private float moveSpeed = 5f;     // ブロックが動くスピード（お好みで調整）
+    [SerializeField] private LayerMask obstacleLayer;  // 壁のレイヤー（これに触れると止まる）
 
-    [Tooltip("1マスのサイズ (Tilemap を使わない場合にのみ使用)")]
-    [SerializeField] private float gridSize = 1f;
-
-    [Header("Tilemap (任意)")]
-    [Tooltip("Tilemap を設定すると、そのグリッドに合わせて移動します。未設定の場合は gridSize を使用します。")]
-    [SerializeField] private Tilemap tilemap;
-
-    [Tooltip("壁タイルがある Tilemap。移動先にタイルがあると押せません。未設定なら Collider で判定します。")]
-    [SerializeField] private Tilemap wallTilemap;
-
-    private Vector3 targetPosition;
     private bool isMoving = false;
 
-    private void Start()
+    // ★プレイヤーのスクリプトから「いまブロック動いてる？」を確認するための窓口
+    public bool IsMoving => isMoving;
+
+    // プレイヤーがコライダー（Is Trigger = ON）に触れている間、毎フレーム呼ばれる
+    private void OnTriggerStay2D(Collider2D other)
     {
-        // 初期位置をグリッドにスナップ
-        if (tilemap != null)
+        // 触れたのがプレイヤーじゃなければ何もしない
+        if (!other.CompareTag("Player")) return;
+
+        // すでにブロックが移動中なら、新しい入力は受け付けない
+        if (isMoving) return;
+
+        // 押された方向キーを判別する
+        Vector3Int direction = Vector3Int.zero;
+        if (Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.W)) direction = Vector3Int.up;
+        else if (Input.GetKey(KeyCode.DownArrow) || Input.GetKey(KeyCode.S)) direction = Vector3Int.down;
+        else if (Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.A)) direction = Vector3Int.left;
+        else if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.D)) direction = Vector3Int.right;
+
+        // 方向キーが押されたら処理をスタート
+        if (direction != Vector3Int.zero)
         {
-            Vector3Int cell = tilemap.WorldToCell(transform.position);
-            targetPosition = tilemap.GetCellCenterWorld(cell);
+            // 1. 現在のマスから、次のマスの座標を計算
+            Vector3Int currentCell = targetGrid.WorldToCell(transform.position);
+            Vector3Int targetCell = currentCell + direction;
+            Vector3 targetPosition = targetGrid.GetCellCenterWorld(targetCell);
+
+            // 2. 移動先が「壁」じゃないかチェック
+            if (!IsObstacleAt(targetPosition))
+            {
+                // 壁がなければ、滑らかに移動するコルーチンを開始
+                StartCoroutine(SmoothMove(targetPosition));
+            }
         }
-        else
-        {
-            targetPosition = SnapToGrid(transform.position);
-        }
-        transform.position = targetPosition;
     }
 
-    private void Update()
+    // 移動先に壁（指定したレイヤー）があるか調べるセンサー
+    private bool IsObstacleAt(Vector3 targetPos)
     {
-        if (isMoving)
+        // 目標地点を中心に、半径0.4mの円の中に壁があるかチェック
+        return Physics2D.OverlapCircle(targetPos, 0.4f, obstacleLayer);
+    }
+
+    // 1マス分をスーッと滑らかに動かす処理
+    private IEnumerator SmoothMove(Vector3 targetPosition)
+    {
+        isMoving = true;
+
+        // 目的地にほぼ到着するまで、少しずつ位置を近づける
+        while (Vector3.Distance(transform.position, targetPosition) > 0.01f)
         {
             transform.position = Vector3.MoveTowards(
                 transform.position,
                 targetPosition,
                 moveSpeed * Time.deltaTime
             );
-
-            if ((transform.position - targetPosition).sqrMagnitude < 0.0001f)
-            {
-                transform.position = targetPosition;
-                isMoving = false;
-            }
-        }
-    }
-
-    /// <summary>
-    /// 指定方向に1マス押せるかどうかを判定し、押せるなら移動を開始する。
-    /// 押せたかどうかを返す(PlayerScript側はこれを見て、自分も進むかどうかを決める)。
-    /// </summary>
-    public bool TryPush(Vector3 direction)
-    {
-        if (isMoving) return false; // 自分が移動中は押せない
-        Vector3 destinationWorld;
-
-        if (tilemap != null)
-        {
-            // 現在セルを取得して、direction の整数オフセットを適用する
-            Vector3Int currentCell = tilemap.WorldToCell(transform.position);
-            Vector3Int offset = new Vector3Int(Mathf.RoundToInt(direction.x), Mathf.RoundToInt(direction.y), 0);
-            Vector3Int destCell = currentCell + offset;
-
-            // 壁タイルがあるかチェック
-            if (wallTilemap != null)
-            {
-                TileBase tile = wallTilemap.GetTile(destCell);
-                if (tile != null) return false; // 壁がある
-            }
-
-            destinationWorld = tilemap.GetCellCenterWorld(destCell);
-
-            // 押し先に別のブロックがあるかチェック
-            Collider2D hit = Physics2D.OverlapPoint(destinationWorld);
-            if (hit != null && hit.gameObject != gameObject && hit.CompareTag("Block"))
-            {
-                return false; // 押し先がふさがっている
-            }
-        }
-        else
-        {
-            // Tilemap 未使用時は従来どおり gridSize を用いる
-            Vector3 destination = transform.position + direction * gridSize;
-            Collider2D hit = Physics2D.OverlapPoint(destination);
-            if (hit != null && hit.gameObject != gameObject && hit.CompareTag("Block"))
-            {
-                return false;
-            }
-            destinationWorld = destination;
+            yield return null; // 1フレーム待つ
         }
 
-        targetPosition = destinationWorld;
-        isMoving = true;
-        return true;
-    }
+        // 最後にカチッと目的地の座標に合わせる
+        transform.position = targetPosition;
 
-    private Vector3 SnapToGrid(Vector3 pos)
-    {
-        float x = Mathf.Round(pos.x / gridSize) * gridSize;
-        float y = Mathf.Round(pos.y / gridSize) * gridSize;
-        return new Vector3(x, y, pos.z);
+        isMoving = false;
     }
 }
