@@ -31,6 +31,9 @@ public class StageSelectManager : MonoBehaviour
     [Tooltip("ノード間の移動速度")]
     [SerializeField] private float moveSpeed = 5f;
 
+    [Tooltip("ノードからのオフセット。Yを上げるとキャラがノードより上に表示される")]
+    [SerializeField] private Vector2 iconOffset = new Vector2(0f, 0.5f);
+
     [Header("--- パスライン設定 ---")]
     [Tooltip("ノード間を繋ぐLineRenderer")]
     [SerializeField] private LineRenderer pathLine;
@@ -58,8 +61,8 @@ public class StageSelectManager : MonoBehaviour
             return;
         }
 
-        // キャラを最初のノードに配置
-        stageIcon.position = stages[0].nodeTransform.position;
+        // キャラを最初のノード位置 + オフセットに配置
+        stageIcon.position = (Vector2)stages[0].nodeTransform.position + iconOffset;
 
         DrawPath();
     }
@@ -85,12 +88,13 @@ public class StageSelectManager : MonoBehaviour
     private void TryMove(int direction)
     {
         int next = currentIndex + direction;
-
-        // 範囲外なら無視
         if (next < 0 || next >= stages.Length) return;
 
         currentIndex = next;
-        StartCoroutine(MoveToNode(stages[currentIndex].nodeTransform.position));
+
+        // 移動先もオフセットを足した位置にする
+        Vector3 target = (Vector2)stages[currentIndex].nodeTransform.position + iconOffset;
+        StartCoroutine(MoveToNode(target));
     }
 
     private IEnumerator MoveToNode(Vector3 targetPos)
@@ -124,7 +128,7 @@ public class StageSelectManager : MonoBehaviour
 
         ScreenTransitionManager.Instance.TransitionToScene(
             stages[currentIndex].sceneName,
-            stageIcon.position  // キャラの今いる位置を中心にアイリスアウト
+            stageIcon.position
         );
     }
 

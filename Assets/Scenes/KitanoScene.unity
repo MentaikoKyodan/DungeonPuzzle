@@ -3826,8 +3826,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ScreenTransitionManager
   blackOverlay: {fileID: 1138655965}
   irisMask: {fileID: 341042873}
-  irisOutDuration: 1.3
-  irisInDuration: 1.2
+  irisOutDuration: 1
+  irisInDuration: 1
   sirenClip: {fileID: 0}
   transitionCanvas: {fileID: 1127469344}
   redFlashImage: {fileID: 652495387}
