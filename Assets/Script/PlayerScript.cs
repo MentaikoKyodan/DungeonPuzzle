@@ -30,6 +30,9 @@ public class PlayerScript : MonoBehaviour
     public Vector3 targetWorldPos; // 移動先のワールド座標
     private bool isMoving = false;  // 移動中かどうかのフラグ
 
+    // インスペクター等でブロックの
+    [SerializeField] private BlockScript blockMover;
+
 
 
     private void Start()
@@ -56,8 +59,15 @@ public class PlayerScript : MonoBehaviour
         }
     }
 
+    
+
     private void HandleInput()
     {
+        // もしブロックが動いている最中なら、プレイヤーはキー入力を無視して動けない
+        if (blockMover != null && blockMover.IsMoving)
+        {
+            return;
+        }
 
         int moveX = 0;
         int moveY = 0;
