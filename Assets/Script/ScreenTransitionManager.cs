@@ -54,11 +54,6 @@ public class ScreenTransitionManager : MonoBehaviour
     [Range(0.1f, 0.9f)]
     [SerializeField] private float flashPeakTiming = 0.3f;
 
-    [Header("--- 暗転設定 ---")]
-    [SerializeField] private Image fadeImage;
-
-    [Tooltip("暗転にかかる時間(秒)")]
-    [SerializeField] private float fadeDuration = 1.0f;
     // =========================================================
     // 内部状態
     // =========================================================
@@ -283,48 +278,5 @@ public class ScreenTransitionManager : MonoBehaviour
             return Vector3.zero;
         }
         return player.transform.position;
-    }
-    public void FadeTransitionToScene(string sceneName)
-    {
-        if (isTransitioning) return;
-        StartCoroutine(FadeSequence(sceneName));
-    }
-
-    private IEnumerator FadeSequence(string sceneName)
-    {
-        isTransitioning = true;
-
-        // 暗転
-        yield return StartCoroutine(Fade(0f, 1f, fadeDuration));
-
-        yield return SceneManager.LoadSceneAsync(sceneName);
-        yield return null;
-
-        // 明転
-        yield return StartCoroutine(Fade(1f, 0f, fadeDuration));
-
-        isTransitioning = false;
-    }
-
-    private IEnumerator Fade(float from, float to, float duration)
-    {
-        fadeImage.gameObject.SetActive(true);
-        Color c = fadeImage.color;
-        float elapsed = 0f;
-
-        while (elapsed < duration)
-        {
-            elapsed += Time.deltaTime;
-            c.a = Mathf.Lerp(from, to, elapsed / duration);
-            fadeImage.color = c;
-            yield return null;
-        }
-
-        c.a = to;
-        fadeImage.color = c;
-
-        // 完全に透明になったら非表示
-        if (to == 0f)
-            fadeImage.gameObject.SetActive(false);
     }
 }
