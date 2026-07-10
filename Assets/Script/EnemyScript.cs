@@ -11,7 +11,7 @@ using UnityEngine;
 /// </summary>
 public class EnemyScript : MonoBehaviour
 {
-    public enum SensorAxis { Right, Up }
+    public enum SensorAxis { Right, Up,Left,Down }
     
     [Header("センサー設定")]
     [Tooltip("センサーの「前方」をどちらの軸とするか")]
@@ -168,7 +168,14 @@ public class EnemyScript : MonoBehaviour
 
     private Vector2 GetSensorDirection()
     {
-        Vector2 dir = (sensorAxis == SensorAxis.Right) ? (Vector2)transform.right : (Vector2)transform.up;
+        Vector2 dir = sensorAxis switch
+        {
+            SensorAxis.Right => Vector2.right,
+            SensorAxis.Left => Vector2.left,
+            SensorAxis.Up => Vector2.up,
+            SensorAxis.Down => Vector2.down,
+            _ => Vector2.right
+        };
         return invertDirection ? -dir : dir;
     }
 
