@@ -37,7 +37,7 @@ public class BlockScript : MonoBehaviour
     }
 
     // 1マス分をスーッと滑らかに動かす処理
-    private IEnumerator SmoothMove(Vector3 targetPosition)
+    public IEnumerator SmoothMove(Vector3 targetPosition)
     {
         isMoving = true;
 
