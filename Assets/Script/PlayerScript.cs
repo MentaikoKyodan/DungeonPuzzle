@@ -32,6 +32,8 @@ public class PlayerScript : MonoBehaviour
     private bool isMoving = false;  // 移動中かどうかのフラグ
     // 移動前のワールド座標（到着後に重なりが発生した場合はここへ戻す）
     private Vector3 prevWorldPos;
+    // ブロックを押している間、プレイヤーがその方向に動かないようにロックする
+    private Vector3Int blockedDirection = Vector3Int.zero;
 
     // インスペクター等でブロックの
     [SerializeField] private BlockScript blockMover;
@@ -48,6 +50,16 @@ public class PlayerScript : MonoBehaviour
 
         // マスの中心のワールド座標を取得して、プレイヤーをピタッと合わせる
         transform.position = targetTilemap.GetCellCenterWorld(currentCell);
+    }
+
+    private System.Collections.IEnumerator UnlockWhenBlockStopped(BlockScript bs)
+    {
+        // ブロックが動き終わるまで待つ
+        while (bs != null && bs.IsMoving)
+        {
+            yield return null;
+        }
+        blockedDirection = Vector3Int.zero;
     }
 
     private void Update()
@@ -72,17 +84,18 @@ public class PlayerScript : MonoBehaviour
     private void HandleInput()
     {
         // もしブロックが動いている最中なら、プレイヤーはキー入力を無視して動けない
-        if (blockMover != null && blockMover.IsMoving)
-        {
-            return;
-        }
         if (isMoving) return;
 
         Vector3Int direction = Vector3Int.zero;
-        if (Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.W)) direction = Vector3Int.up;
-        else if (Input.GetKey(KeyCode.DownArrow) || Input.GetKey(KeyCode.S)) direction = Vector3Int.down;
-        else if (Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.A)) direction = Vector3Int.left;
-        else if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.D)) direction = Vector3Int.right;
+        if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W)) direction = Vector3Int.up;
+        else if (Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.S)) direction = Vector3Int.down;
+        else if (Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.A)) direction = Vector3Int.left;
+        else if (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.D)) direction = Vector3Int.right;
+        // ブロックを押している間、その方向の入力は無視する
+        if (direction != Vector3Int.zero && direction == blockedDirection)
+        {
+            return;
+        }
         if (blockMover != null && blockMover.IsMoving)
         {
             return;
@@ -101,20 +114,12 @@ public class PlayerScript : MonoBehaviour
                 Debug.Log("壁があるので進めません！");
                 return;
             }
-            if(IsObstacleAt(targetPosition))
-            {
-                Debug.Log("おおおおおお");
-                return;
-            }
+            
                 // 今はそのまま移動を開始する
                 StartMove(nextCell);
         }
     }
-    public bool IsObstacleAt(Vector3 targetPos)
-    {
-        // 目標地点を中心に、半径0.4mの円の中にブロックがあるかチェック
-        return Physics2D.OverlapCircle(targetPos, 0.1f, blockLayer);
-    }
+
 
     // 移動の開始処理
     private void StartMove(Vector3Int nextCell)
