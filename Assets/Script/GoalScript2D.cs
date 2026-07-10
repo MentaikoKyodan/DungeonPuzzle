@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 /// <summary>
 /// 2Dトップビュー用のゴール判定スクリプト。
@@ -16,15 +15,19 @@ public class GoalScript2D : MonoBehaviour
     [SerializeField] private bool loadNextScene = false;
     [Tooltip("読み込むシーン名（Build Settingsに追加しておくこと）")]
     [SerializeField] private string nextSceneName = "";
-    [Tooltip("シーン遷移までの待機時間（秒）")]
+    [Tooltip("アイリスアウト開始までの待機時間（秒）")]
     [SerializeField] private float loadDelay = 1.0f;
+
+    [Header("ステージ情報")]
+    [Tooltip("StageSelectManagerのStages配列の何番目のステージか(0始まり)")]
+    [SerializeField] private int stageIndex = 0;
 
     [Header("演出")]
     [SerializeField] private AudioClip goalSound;
     [SerializeField] private GameObject goalEffectPrefab;
-    [SerializeField] private GameObject goalUI; // 「GOAL」と表示するUIなどがあれば割り当て
+    [SerializeField] private GameObject goalUI;
 
-    private bool isGoaled = false; // 多重発火防止
+    private bool isGoaled = false;
 
     private void OnTriggerEnter2D(Collider2D other)
     {
@@ -39,29 +42,21 @@ public class GoalScript2D : MonoBehaviour
     {
         Debug.Log("Goal!");
 
-        // SE再生
+        // クリア済みとして記録
+        if (GameData.Instance != null)
+            GameData.Instance.SetCleared(stageIndex);
+
         if (goalSound != null)
-        {
             AudioSource.PlayClipAtPoint(goalSound, transform.position);
-        }
 
-        // エフェクト生成
         if (goalEffectPrefab != null)
-        {
             Instantiate(goalEffectPrefab, transform.position, Quaternion.identity);
-        }
 
-        // ゴールUI表示
         if (goalUI != null)
-        {
             goalUI.SetActive(true);
-        }
 
-        // シーン遷移
         if (loadNextScene && !string.IsNullOrEmpty(nextSceneName))
-        {
             Invoke(nameof(StartTransition), loadDelay);
-        }
     }
 
     private void StartTransition()
@@ -72,7 +67,6 @@ public class GoalScript2D : MonoBehaviour
             return;
         }
 
-        // プレイヤーの位置を中心にアイリスアウト → nextSceneNameに遷移 → アイリスイン
         var player = FindFirstObjectByType<PlayerScript>();
         Vector3 center = player != null ? player.transform.position : transform.position;
 

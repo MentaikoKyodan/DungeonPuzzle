@@ -135,8 +135,13 @@ public class ScreenTransitionManager : MonoBehaviour
         yield return SceneManager.LoadSceneAsync(sceneName);
         yield return null;
 
-        Vector3 spawnPos = GetPlayerWorldPos();
-        yield return StartCoroutine(IrisIn(spawnPos));
+        // ステージセレクトならアイコン位置、ゲームシーンならカメラ中心を使う
+        var stageSelect = FindFirstObjectByType<StageSelectManager>();
+        Vector3 irisCenter = stageSelect != null
+            ? stageSelect.StageIconWorldPos
+            : Camera.main.transform.position;
+
+        yield return StartCoroutine(IrisIn(irisCenter));
 
         SetPlayerInputEnabled(true);
         isTransitioning = false;

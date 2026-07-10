@@ -3,11 +3,6 @@ using UnityEngine;
 
 /// <summary>
 /// ステージセレクト画面の管理スクリプト
-///
-/// [使い方]
-/// Inspector上でStageNode配列にノードを登録する。
-/// A/D または ←/→ でノード間をキャラが移動する。
-/// Enterで選択中ステージにアイリスアウト遷移する。
 /// </summary>
 public class StageSelectManager : MonoBehaviour
 {
@@ -19,40 +14,34 @@ public class StageSelectManager : MonoBehaviour
 
         [Tooltip("このノードのTransform(位置情報として使う)")]
         public Transform nodeTransform;
+
+        [Tooltip("ノードのSpriteRenderer。クリア済みの色変更に使う")]
+        public SpriteRenderer nodeRenderer;
     }
 
     [Header("--- ステージ設定 ---")]
     [SerializeField] private StageNode[] stages;
 
     [Header("--- キャラクター設定 ---")]
-    [Tooltip("ノード間を移動するキャラクターのTransform")]
     [SerializeField] private Transform stageIcon;
-
-    [Tooltip("ノード間の移動速度")]
     [SerializeField] private float moveSpeed = 5f;
-
-    [Tooltip("ノードからのオフセット。Yを上げるとキャラがノードより上に表示される")]
     [SerializeField] private Vector2 iconOffset = new Vector2(0f, 0.5f);
 
     [Header("--- パスライン設定 ---")]
-    [Tooltip("ノード間を繋ぐLineRenderer")]
     [SerializeField] private LineRenderer pathLine;
-
-    [Tooltip("ラインの太さ")]
     [SerializeField] private float lineWidth = 0.1f;
-
-    [Tooltip("ラインの色")]
     [SerializeField] private Color lineColor = Color.white;
 
-    // =========================================================
-    // 内部状態
-    // =========================================================
+    [Header("--- クリア演出設定 ---")]
+    [Tooltip("クリア済みノードに変わる色")]
+    [SerializeField] private Color clearedColor = Color.yellow;
+
+    // stageIconの位置をScreenTransitionManagerから取得するためのプロパティ
+    public Vector3 StageIconWorldPos => stageIcon.position;
+
     private int currentIndex = 0;
     private bool isMoving = false;
 
-    // =========================================================
-    // 初期化
-    // =========================================================
     private void Start()
     {
         if (stages == null || stages.Length == 0)
@@ -61,15 +50,29 @@ public class StageSelectManager : MonoBehaviour
             return;
         }
 
-        // キャラを最初のノード位置 + オフセットに配置
-        stageIcon.position = (Vector2)stages[0].nodeTransform.position + iconOffset;
+        // GameDataが存在する場合、最後にプレイしたステージ番号から再開する
+        if (GameData.Instance != null)
+        {
+            currentIndex = Mathf.Clamp(
+                GameData.Instance.LastPlayedStageIndex,
+                0,
+                stages.Length - 1
+            );
+
+            // クリア済みステージのノード色を更新する
+            for (int i = 0; i < stages.Length; i++)
+            {
+                if (GameData.Instance.IsCleared(i) && stages[i].nodeRenderer != null)
+                    stages[i].nodeRenderer.color = clearedColor;
+            }
+        }
+
+        // アイコンを該当ノード位置に配置
+        stageIcon.position = (Vector2)stages[currentIndex].nodeTransform.position + iconOffset;
 
         DrawPath();
     }
 
-    // =========================================================
-    // 入力処理
-    // =========================================================
     private void Update()
     {
         if (isMoving) return;
@@ -82,17 +85,12 @@ public class StageSelectManager : MonoBehaviour
             EnterStage();
     }
 
-    // =========================================================
-    // ノード間移動
-    // =========================================================
     private void TryMove(int direction)
     {
         int next = currentIndex + direction;
         if (next < 0 || next >= stages.Length) return;
 
         currentIndex = next;
-
-        // 移動先もオフセットを足した位置にする
         Vector3 target = (Vector2)stages[currentIndex].nodeTransform.position + iconOffset;
         StartCoroutine(MoveToNode(target));
     }
@@ -115,9 +113,6 @@ public class StageSelectManager : MonoBehaviour
         isMoving = false;
     }
 
-    // =========================================================
-    // ステージ決定
-    // =========================================================
     private void EnterStage()
     {
         if (ScreenTransitionManager.Instance == null)
@@ -126,7 +121,7 @@ public class StageSelectManager : MonoBehaviour
             return;
         }
 
-        isMoving = true;
+        isMoving = true; // 演出中の入力を止める
 
         ScreenTransitionManager.Instance.TransitionToScene(
             stages[currentIndex].sceneName,
@@ -134,9 +129,6 @@ public class StageSelectManager : MonoBehaviour
         );
     }
 
-    // =========================================================
-    // パスライン描画
-    // =========================================================
     private void DrawPath()
     {
         if (pathLine == null) return;
