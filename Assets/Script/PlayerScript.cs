@@ -12,6 +12,7 @@ public class PlayerScript : MonoBehaviour
     [SerializeField] private LayerMask blockLayer;    // ブロック（Block）のレイヤー
     [SerializeField] private Tilemap blockTilemap;    // ブロックが描かれているTilemap
     [SerializeField] private GameObject blockRenderPrefab; // ブロックの見た目用プレハブ
+    [SerializeField] private PlayerAnimationController animController;
     public Vector3 startPosition;
 
     // --- 溜め機能用の変数 ---
@@ -39,6 +40,14 @@ public class PlayerScript : MonoBehaviour
         // キーが押された場合の処理
         if (direction != Vector3Int.zero)
         {
+            if (animController != null)
+            {
+                if (direction == Vector3Int.right)
+                    animController.SetFacing(true);
+                else if (direction == Vector3Int.left)
+                    animController.SetFacing(false);
+                // 上下の場合は向きそのまま
+            }
             Vector3Int currentCell = targetGrid.WorldToCell(transform.position);
             Vector3Int targetCell = currentCell + direction;
             Vector3 targetPosition = targetGrid.GetCellCenterWorld(targetCell);
@@ -64,6 +73,8 @@ public class PlayerScript : MonoBehaviour
                 {
                     Debug.Log($"ブロックが {connectedBlocks.Count} 個連なっています。パワーが足りません！");
                     ResetCharge();
+                    if (animController != null)
+                        animController.SetState(PlayerAnimationController.AnimState.Idle);
                     return;
                 }
                 // 連なっているブロックの「さらに一歩先」の座標を計算
@@ -76,11 +87,13 @@ public class PlayerScript : MonoBehaviour
                 {
                     Debug.Log("ブロックの先が壁なので押せません！");
                     ResetCharge();
+                    if (animController != null)
+                        animController.SetState(PlayerAnimationController.AnimState.Idle);
                     return;
                 }
 
                 // すべての条件をクリア！連なったブロックたちをまとめて動かす
-                StartCoroutine(MoveMultipleBlocksRoutine(connectedBlocks, direction));
+                StartCoroutine(PunchAndPushRoutine(connectedBlocks, direction));
 
                 // ブロックを押したら溜めは消費される
                 ResetCharge();
@@ -92,21 +105,43 @@ public class PlayerScript : MonoBehaviour
         }
     }
     // --- 溜め入力の処理 ---
+    // ★追加：殴りアニメを再生してから、ブロックを実際に動かす
+    private IEnumerator PunchAndPushRoutine(List<Vector3Int> blockList, Vector3Int direction)
+    {
+        isBlockMoving = true;
+
+        if (animController != null)
+        {
+            bool punchFinished = false;
+            System.Action onFinished = () => { punchFinished = true; };
+
+            animController.OnNonLoopAnimFinished += onFinished;
+            animController.SetState(PlayerAnimationController.AnimState.Punch);
+
+            while (!punchFinished)
+                yield return null;
+
+            animController.OnNonLoopAnimFinished -= onFinished;
+        }
+
+        yield return StartCoroutine(MoveMultipleBlocksRoutine(blockList, direction));
+
+        if (animController != null)
+            animController.SetState(PlayerAnimationController.AnimState.Idle);
+
+        isBlockMoving = false;
+    }
     private void HandleCharge()
     {
-        // スペースキーが「ポンと押された瞬間」だけ検知する
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            // レベルを1上げる (0 → 1 → 2)
             chargeLevel++;
 
-            // 2段階を超えたら通常(0)に戻る（ループさせる場合）
             if (chargeLevel > 2)
             {
                 chargeLevel = 2;
             }
 
-            // 画面（コンソール）に現在の状態を表示
             switch (chargeLevel)
             {
                 case 0:
@@ -114,9 +149,13 @@ public class PlayerScript : MonoBehaviour
                     break;
                 case 1:
                     Debug.Log("【パワー：1段階】木箱を 2 個同時に押せます！");
+                    if (animController != null)
+                        animController.SetState(PlayerAnimationController.AnimState.Charge1);
                     break;
                 case 2:
                     Debug.Log("【パワー：2段階】木箱を 3 個同時に押せます！！");
+                    if (animController != null)
+                        animController.SetState(PlayerAnimationController.AnimState.Charge2);
                     break;
             }
         }
@@ -151,6 +190,9 @@ public class PlayerScript : MonoBehaviour
     private IEnumerator MoveMultipleBlocksRoutine(List<Vector3Int> blockList, Vector3Int direction)
     {
         isBlockMoving = true;
+
+        if (animController != null)
+            animController.SetState(PlayerAnimationController.AnimState.Push);
 
         List<GameObject> dummies = new List<GameObject>();
         List<Vector3> endPositions = new List<Vector3>();
