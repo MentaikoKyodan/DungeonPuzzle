@@ -149,33 +149,38 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eec6429ac1a557840b34377edb2c341e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerAnimationController
-  spriteRenderer: {fileID: 0}
+  spriteRenderer: {fileID: 214338816}
   idleAnim:
     frames:
     - {fileID: 4577484574575314426, guid: d06267c4bcf192e43858a55376cf32bc, type: 3}
     - {fileID: 6283691293733382590, guid: 33edc3dfed409b542b6a306d8d9f32f4, type: 3}
     frameInterval: 0.4
     loop: 1
+    impactFrame: -1
   pushAnim:
     frames:
     - {fileID: -4509506210544505328, guid: 75a994f54b8b84b42bc458995f4e6693, type: 3}
     frameInterval: 0.15
     loop: 0
+    impactFrame: 0
   charge1Anim:
     frames:
     - {fileID: 6142619683376533515, guid: 4a1912eb32212094d96ac156c84f16a7, type: 3}
     frameInterval: 0.2
     loop: 1
+    impactFrame: -1
   charge2Anim:
     frames:
     - {fileID: 4195751103690028070, guid: 317ba136eb13bd1409636ab3a12c0dcd, type: 3}
     frameInterval: 0.2
     loop: 1
+    impactFrame: -1
   punchAnim:
     frames:
     - {fileID: -4509506210544505328, guid: 75a994f54b8b84b42bc458995f4e6693, type: 3}
     frameInterval: 0.15
     loop: 0
+    impactFrame: 0
 --- !u!212 &214338816
 SpriteRenderer:
   serializedVersion: 2
@@ -4459,7 +4464,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &2028293540
 MonoBehaviour:
   m_ObjectHideFlags: 0
