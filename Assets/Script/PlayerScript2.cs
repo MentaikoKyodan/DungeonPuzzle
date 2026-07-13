@@ -233,7 +233,7 @@ public class PlayerScript2 : MonoBehaviour
         chargeLevel = 0; // ← ここで確実に通常状態（1個押し）に戻します！
         Debug.Log("【パワー消費】通常状態に戻りました。再チャージが必要です。");
         particleObj.SetActive(false);
-        particleObj.SetActive(false);
+        particleObj2.SetActive(false);
     }
     // --- プレイヤーを1マス滑らかに動かす処理 ---
     private IEnumerator MovePlayerRoutine(Vector3 targetPos)
