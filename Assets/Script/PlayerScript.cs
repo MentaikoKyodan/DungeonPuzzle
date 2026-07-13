@@ -152,14 +152,11 @@ public class PlayerScript : MonoBehaviour
     {
         isBlockMoving = true;
 
-        // 演出用のダミーオブジェクトと、それぞれの目的地の座標を記録するリスト
         List<GameObject> dummies = new List<GameObject>();
         List<Vector3> endPositions = new List<Vector3>();
         List<TileBase> originalTiles = new List<TileBase>();
         List<Vector3Int> nextCells = new List<Vector3Int>();
 
-        // ① 動かすブロック全体のデータを一時保存し、タイルマップから一旦全部消す
-        // （※後ろのブロックが前のブロックの消し跡に上書きされないよう、逆順、または一括で処理します）
         for (int i = 0; i < blockList.Count; i++)
         {
             Vector3Int fromCell = blockList[i];
@@ -176,6 +173,13 @@ public class PlayerScript : MonoBehaviour
             GameObject dummy = Instantiate(blockRenderPrefab, startPos, Quaternion.identity);
             SpriteRenderer sr = dummy.GetComponent<SpriteRenderer>();
             if (sr != null) sr.sprite = blockTilemap.GetSprite(fromCell);
+
+            // ★ここが今回の追加分：動いてる間だけ当たり判定を持たせる
+            BoxCollider2D col = dummy.GetComponent<BoxCollider2D>();
+            if (col == null) col = dummy.AddComponent<BoxCollider2D>();
+            col.isTrigger = false;
+            dummy.layer = GetLayerFromMask(blockLayer); // Block Layerに設定
+
             dummies.Add(dummy);
         }
 
@@ -185,7 +189,7 @@ public class PlayerScript : MonoBehaviour
             blockTilemap.SetTile(cell, null);
         }
 
-        // ② すべてのダミーブロックを同時にスーッと目標位置まで動かす
+        // すべてのダミーブロックを同時にスーッと目標位置まで動かす
         bool allArrived = false;
         while (!allArrived)
         {
@@ -198,7 +202,6 @@ public class PlayerScript : MonoBehaviour
                     moveSpeed * Time.deltaTime
                 );
 
-                // まだ目的地に着いていないやつが1つでもあればループを継続
                 if (Vector3.Distance(dummies[i].transform.position, endPositions[i]) > 0.01f)
                 {
                     allArrived = false;
@@ -207,7 +210,7 @@ public class PlayerScript : MonoBehaviour
             yield return null;
         }
 
-        // ③ 目的地に着いたら、すべてのダミーを消して、本物のタイルマップの新しい位置にデータを書き戻す
+        // 目的地に着いたら、すべてのダミーを消して、本物のタイルマップの新しい位置にデータを書き戻す
         for (int i = 0; i < dummies.Count; i++)
         {
             Destroy(dummies[i]);
@@ -215,6 +218,19 @@ public class PlayerScript : MonoBehaviour
         }
 
         isBlockMoving = false;
+    }
+
+    // ★追加：LayerMaskからレイヤー番号を取り出すヘルパー
+    private int GetLayerFromMask(LayerMask mask)
+    {
+        int layerNumber = 0;
+        int layer = mask.value;
+        while (layer > 1)
+        {
+            layer = layer >> 1;
+            layerNumber++;
+        }
+        return layerNumber;
     }
     public void ResetToStart(Vector3Int nextCell)
     {

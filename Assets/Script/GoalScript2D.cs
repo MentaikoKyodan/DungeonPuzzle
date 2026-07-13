@@ -6,9 +6,24 @@ using UnityEngine;
 /// </summary>
 public class GoalScript2D : MonoBehaviour
 {
+    public static GoalScript2D Instance { get; private set; }
+
     [Header("判定対象")]
     [Tooltip("ゴールと判定するオブジェクトのタグ")]
     [SerializeField] private string targetTag = "Player";
+
+    [Header("鍵設定")]
+    [Tooltip("ボタンギミックがあるステージではON。最初は鍵がかかった状態になる")]
+    [SerializeField] private bool startLocked = false;
+    [Tooltip("解錠に必要なボタンの数")]
+    [SerializeField] private int requiredButtonCount = 1;
+
+    [Header("鍵の見た目")]
+    [SerializeField] private SpriteRenderer spriteRenderer;
+    [Tooltip("鍵がかかっている時の色")]
+    [SerializeField] private Color lockedColor = Color.gray;
+    [Tooltip("鍵が開いている時の色")]
+    [SerializeField] private Color unlockedColor = Color.white;
 
     [Header("ゴール後の動作")]
     [Tooltip("チェックすると指定したシーンに遷移します")]
@@ -28,10 +43,56 @@ public class GoalScript2D : MonoBehaviour
     [SerializeField] private GameObject goalUI;
 
     private bool isGoaled = false;
+    private bool isLocked;
+    private int pressedButtonCount = 0;
+
+    public bool IsLocked => isLocked;
+
+    private void Awake()
+    {
+        Instance = this;
+
+        if (spriteRenderer == null)
+            spriteRenderer = GetComponent<SpriteRenderer>();
+
+        isLocked = startLocked;
+        UpdateVisual();
+    }
+
+    // --- ボタンギミックから呼ばれる ---
+    public void NotifyButtonPressed()
+    {
+        pressedButtonCount++;
+        CheckUnlock();
+    }
+
+    public void NotifyButtonReleased()
+    {
+        pressedButtonCount = Mathf.Max(0, pressedButtonCount - 1);
+        CheckUnlock();
+    }
+
+    private void CheckUnlock()
+    {
+        bool shouldBeLocked = pressedButtonCount < requiredButtonCount;
+
+        if (shouldBeLocked != isLocked)
+        {
+            isLocked = shouldBeLocked;
+            UpdateVisual();
+        }
+    }
+
+    private void UpdateVisual()
+    {
+        if (spriteRenderer == null) return;
+        spriteRenderer.color = isLocked ? lockedColor : unlockedColor;
+    }
 
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (isGoaled) return;
+        if (isLocked) return; // ★鍵がかかっている間はゴール処理を無視する
         if (!other.CompareTag(targetTag)) return;
 
         isGoaled = true;

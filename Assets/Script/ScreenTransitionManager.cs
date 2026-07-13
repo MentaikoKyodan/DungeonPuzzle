@@ -62,7 +62,7 @@ public class ScreenTransitionManager : MonoBehaviour
     // =========================================================
     // 内部状態
     // =========================================================
-    private bool isTransitioning = false;
+    public bool IsTransitioning { get; private set; } = false;
 
     // =========================================================
     // 初期化
@@ -89,13 +89,13 @@ public class ScreenTransitionManager : MonoBehaviour
     public void TriggerGameOver(Vector3 playerWorldPos)
     {
         Debug.Log("TriggerGameOver呼ばれたよ");
-        if (isTransitioning) return;
+        if (IsTransitioning) return;
         StartCoroutine(GameOverSequence(playerWorldPos));
     }
 
     public void TransitionToScene(string sceneName, Vector3 centerWorldPos)
     {
-        if (isTransitioning) return;
+        if (IsTransitioning) return;
         StartCoroutine(SceneTransitionSequence(sceneName, centerWorldPos));
     }
 
@@ -105,7 +105,7 @@ public class ScreenTransitionManager : MonoBehaviour
 
     private IEnumerator GameOverSequence(Vector3 playerWorldPos)
     {
-        isTransitioning = true;
+        IsTransitioning = true;
         SetPlayerInputEnabled(false);
 
         if (sirenClip != null)
@@ -122,12 +122,12 @@ public class ScreenTransitionManager : MonoBehaviour
         yield return StartCoroutine(IrisIn(spawnPos));
 
         SetPlayerInputEnabled(true);
-        isTransitioning = false;
+        IsTransitioning = false;
     }
 
     private IEnumerator SceneTransitionSequence(string sceneName, Vector3 centerWorldPos)
     {
-        isTransitioning = true;
+        IsTransitioning = true;
         SetPlayerInputEnabled(false);
 
         yield return StartCoroutine(IrisOut(centerWorldPos));
@@ -144,7 +144,7 @@ public class ScreenTransitionManager : MonoBehaviour
         yield return StartCoroutine(IrisIn(irisCenter));
 
         SetPlayerInputEnabled(true);
-        isTransitioning = false;
+        IsTransitioning = false;
     }
 
     // =========================================================
@@ -291,13 +291,13 @@ public class ScreenTransitionManager : MonoBehaviour
     }
     public void FadeTransitionToScene(string sceneName)
     {
-        if (isTransitioning) return;
+        if (IsTransitioning) return;
         StartCoroutine(FadeSequence(sceneName));
     }
 
     private IEnumerator FadeSequence(string sceneName)
     {
-        isTransitioning = true;
+        IsTransitioning = true;
 
         // 暗転
         yield return StartCoroutine(Fade(0f, 1f, fadeDuration));
@@ -308,7 +308,7 @@ public class ScreenTransitionManager : MonoBehaviour
         // 明転
         yield return StartCoroutine(Fade(1f, 0f, fadeDuration));
 
-        isTransitioning = false;
+        IsTransitioning = false;
     }
 
     private IEnumerator Fade(float from, float to, float duration)

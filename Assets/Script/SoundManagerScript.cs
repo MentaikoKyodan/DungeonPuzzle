@@ -91,14 +91,14 @@ public class SoundManagerScript : MonoBehaviour
         {
             // 移動開始の瞬間だけ鳴らすため targetWorldPos と現在位置を比較
             // PlayerScript の isMoving 相当を targetWorldPos で判定
-            if (currentPos != player.targetWorldPos)
-            {
-                // すでに再生中なら二重再生しない
-                if (!seSource.isPlaying)
-                {
-                    PlaySE(moveClip);
-                }
-            }
+            //if (currentPos != player.targetWorldPos)
+            //{
+            //    // すでに再生中なら二重再生しない
+            //    if (!seSource.isPlaying)
+            //    {
+            //        PlaySE(moveClip);
+            //    }
+            //}
         }
 
         lastPlayerPos = currentPos;

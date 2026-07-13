@@ -15,7 +15,7 @@ public class StageSelectManager : MonoBehaviour
         [Tooltip("このノードのTransform(位置情報として使う)")]
         public Transform nodeTransform;
 
-        [Tooltip("ノードのSpriteRenderer。クリア済みの色変更に使う")]
+        [Tooltip("ノードのSpriteRenderer。色変更に使う")]
         public SpriteRenderer nodeRenderer;
     }
 
@@ -32,11 +32,12 @@ public class StageSelectManager : MonoBehaviour
     [SerializeField] private float lineWidth = 0.1f;
     [SerializeField] private Color lineColor = Color.white;
 
-    [Header("--- クリア演出設定 ---")]
-    [Tooltip("クリア済みノードに変わる色")]
+    [Header("--- ノード色設定 ---")]
+    [Tooltip("クリア済みノードの色")]
     [SerializeField] private Color clearedColor = Color.yellow;
+    [Tooltip("ロック中ノードの色")]
+    [SerializeField] private Color lockedColor = Color.gray;
 
-    // stageIconの位置をScreenTransitionManagerから取得するためのプロパティ
     public Vector3 StageIconWorldPos => stageIcon.position;
 
     private int currentIndex = 0;
@@ -50,31 +51,27 @@ public class StageSelectManager : MonoBehaviour
             return;
         }
 
-        // GameDataが存在する場合、最後にプレイしたステージ番号から再開する
         if (GameData.Instance != null)
         {
             currentIndex = Mathf.Clamp(
                 GameData.Instance.LastPlayedStageIndex,
-                0,
-                stages.Length - 1
+                0, stages.Length - 1
             );
 
-            // クリア済みステージのノード色を更新する
-            for (int i = 0; i < stages.Length; i++)
-            {
-                if (GameData.Instance.IsCleared(i) && stages[i].nodeRenderer != null)
-                    stages[i].nodeRenderer.color = clearedColor;
-            }
+            // 全ノードの色を状態に合わせて更新
+            UpdateAllNodeColors();
         }
 
-        // アイコンを該当ノード位置に配置
         stageIcon.position = (Vector2)stages[currentIndex].nodeTransform.position + iconOffset;
-
         DrawPath();
     }
 
     private void Update()
     {
+        // アイリス演出中は一切入力を受け付けない
+        if (ScreenTransitionManager.Instance != null && ScreenTransitionManager.Instance.IsTransitioning)
+            return;
+
         if (isMoving) return;
 
         if (Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow))
@@ -121,12 +118,43 @@ public class StageSelectManager : MonoBehaviour
             return;
         }
 
-        isMoving = true; // 演出中の入力を止める
+        // ロック中は入れない
+        if (GameData.Instance != null && !GameData.Instance.IsUnlocked(currentIndex))
+        {
+            Debug.Log($"ステージ{currentIndex}はまだロックされてるよ");
+            // TODO: ロック中の効果音やUIを出したい場合はここに追加
+            return;
+        }
+
+        isMoving = true;
 
         ScreenTransitionManager.Instance.TransitionToScene(
             stages[currentIndex].sceneName,
             stageIcon.position
         );
+    }
+
+    /// <summary>
+    /// 全ノードの色をGameDataの状態に合わせて更新する
+    /// </summary>
+    private void UpdateAllNodeColors()
+    {
+        for (int i = 0; i < stages.Length; i++)
+        {
+            if (stages[i].nodeRenderer == null) continue;
+
+            if (GameData.Instance.IsCleared(i))
+            {
+                // クリア済み
+                stages[i].nodeRenderer.color = clearedColor;
+            }
+            else if (!GameData.Instance.IsUnlocked(i))
+            {
+                // ロック中
+                stages[i].nodeRenderer.color = lockedColor;
+            }
+            // 解放済み・未クリアはデフォルト色のまま
+        }
     }
 
     private void DrawPath()

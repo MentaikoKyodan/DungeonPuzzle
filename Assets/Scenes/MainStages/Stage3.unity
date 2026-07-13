@@ -497,7 +497,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerScript
   targetGrid: {fileID: 1355492712}
-  moveSpeed: 5
+  moveSpeed: 15
   obstacleLayer:
     serializedVersion: 2
     m_Bits: 8
@@ -4577,9 +4577,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GoalScript2D
   targetTag: Player
+  startLocked: 0
+  requiredButtonCount: 1
+  spriteRenderer: {fileID: 0}
+  lockedColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  unlockedColor: {r: 1, g: 0.9098039, b: 0, a: 1}
   loadNextScene: 1
   nextSceneName: StageSelectScene
-  loadDelay: 0.5
+  loadDelay: 0.1
   stageIndex: 2
   goalSound: {fileID: 0}
   goalEffectPrefab: {fileID: 0}
