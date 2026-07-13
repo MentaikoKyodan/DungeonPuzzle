@@ -101,14 +101,25 @@ public class PlayerScript : MonoBehaviour
             }
 
             // 1マス先が「壁」でも「ブロック」でもない（ただの空き地）なら、自分が1マス進む
-            StartCoroutine(MovePlayerRoutine(targetPosition));
+            // 1マス先が「壁」でも「ブロック」でもない（ただの空き地）
+            if (chargeLevel > 0)
+            {
+                // 溜めた状態で移動しようとしたら、何もなくても攻撃だけは出す
+                StartCoroutine(PunchThenMoveRoutine(targetPosition));
+                ResetCharge();
+            }
+            else
+            {
+                StartCoroutine(MovePlayerRoutine(targetPosition));
+            }
         }
     }
     // --- 溜め入力の処理 ---
-    // ★追加：殴りアニメを再生してから、ブロックを実際に動かす
-    private IEnumerator PunchAndPushRoutine(List<Vector3Int> blockList, Vector3Int direction)
+
+    // 溜めてる時に空振りで前進する用（殴ってから移動）
+    private IEnumerator PunchThenMoveRoutine(Vector3 targetPos)
     {
-        isBlockMoving = true;
+        isPlayerMoving = true; // 殴ってる間も入力ブロックしておく
 
         if (animController != null)
         {
@@ -124,6 +135,31 @@ public class PlayerScript : MonoBehaviour
             animController.OnNonLoopAnimFinished -= onFinished;
         }
 
+        yield return StartCoroutine(MovePlayerRoutine(targetPos)); // これがisPlayerMovingをfalseに戻してくれる
+
+        if (animController != null)
+            animController.SetState(PlayerAnimationController.AnimState.Idle);
+    }
+
+    // 殴りアニメを再生してから、ブロックを実際に動かす
+    private IEnumerator PunchAndPushRoutine(List<Vector3Int> blockList, Vector3Int direction)
+    {
+        isBlockMoving = true;
+
+        if (animController != null)
+        {
+            bool impactHappened = false;
+            System.Action onImpact = () => { impactHappened = true; };
+
+            animController.OnAnimImpact += onImpact; 
+            animController.SetState(PlayerAnimationController.AnimState.Punch);
+
+            while (!impactHappened) 
+                yield return null;
+
+            animController.OnAnimImpact -= onImpact; 
+        }
+
         yield return StartCoroutine(MoveMultipleBlocksRoutine(blockList, direction));
 
         if (animController != null)
@@ -133,6 +169,8 @@ public class PlayerScript : MonoBehaviour
     }
     private void HandleCharge()
     {
+        if (isBlockMoving) return;
+
         if (Input.GetKeyDown(KeyCode.Space))
         {
             chargeLevel++;
@@ -216,7 +254,7 @@ public class PlayerScript : MonoBehaviour
             SpriteRenderer sr = dummy.GetComponent<SpriteRenderer>();
             if (sr != null) sr.sprite = blockTilemap.GetSprite(fromCell);
 
-            // ★ここが今回の追加分：動いてる間だけ当たり判定を持たせる
+            // 動いてる間だけ当たり判定を持たせる
             BoxCollider2D col = dummy.GetComponent<BoxCollider2D>();
             if (col == null) col = dummy.AddComponent<BoxCollider2D>();
             col.isTrigger = false;
@@ -262,7 +300,7 @@ public class PlayerScript : MonoBehaviour
         isBlockMoving = false;
     }
 
-    // ★追加：LayerMaskからレイヤー番号を取り出すヘルパー
+    // LayerMaskからレイヤー番号を取り出すヘルパー
     private int GetLayerFromMask(LayerMask mask)
     {
         int layerNumber = 0;
@@ -282,7 +320,7 @@ public class PlayerScript : MonoBehaviour
         //nextCell = Vector3Int.RoundToInt(startPosition);
         currentPosition = startPosition;
     }
-    // ★新しく追加：指定した方向に向かって、ブロックが何個連なっているかを調べる関数
+    // 指定した方向に向かって、ブロックが何個連なっているかを調べる関数
     private List<Vector3Int> GetConnectedBlocks(Vector3Int startCell, Vector3Int direction)
     {
         List<Vector3Int> blockCells = new List<Vector3Int>();

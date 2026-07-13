@@ -18,8 +18,9 @@ public class PlayerAnimationController : MonoBehaviour
         public Sprite[] frames;
         public float frameInterval = 0.2f;
         public bool loop = true;
+        public int impactFrame = -1;
     }
-
+    public event Action OnAnimImpact;
     [SerializeField] private SpriteRenderer spriteRenderer;
     public void SetFacing(bool facingRight)
     {
@@ -65,6 +66,7 @@ public class PlayerAnimationController : MonoBehaviour
 
     private void Update()
     {
+
         if (currentClip == null || currentClip.frames.Length == 0 || finished) return;
 
         timer += Time.deltaTime;
@@ -89,6 +91,11 @@ public class PlayerAnimationController : MonoBehaviour
             }
 
             spriteRenderer.sprite = currentClip.frames[frameIndex];
+
+            if (currentClip.impactFrame >= 0 && frameIndex == currentClip.impactFrame)
+            {
+                OnAnimImpact?.Invoke();
+            }
         }
     }
 
