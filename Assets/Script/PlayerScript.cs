@@ -113,6 +113,16 @@ public class PlayerScript : MonoBehaviour
                 StartCoroutine(MovePlayerRoutine(targetPosition));
             }
         }
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            if (ScreenTransitionManager.Instance != null)
+                ScreenTransitionManager.Instance.TriggerGameOver(transform.position);
+        }
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            if (ScreenTransitionManager.Instance != null)
+                ScreenTransitionManager.Instance.TransitionToScene("StageSelectScene", transform.position);
+        }
     }
     // --- 溜め入力の処理 ---
 

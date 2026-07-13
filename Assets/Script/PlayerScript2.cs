@@ -1,8 +1,8 @@
-using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine.Tilemaps; // タイルマップを操作するために必要
+using UnityEngine;
 using UnityEngine.InputSystem; // ★追加：コントローラー(Gamepad)対応のため
+using UnityEngine.Tilemaps; // タイルマップを操作するために必要
 
 public class PlayerScript2 : MonoBehaviour
 {
@@ -14,6 +14,10 @@ public class PlayerScript2 : MonoBehaviour
     [SerializeField] private Tilemap blockTilemap;    // ブロックが描かれているTilemap
     [SerializeField] private GameObject blockRenderPrefab; // ブロックの見た目用プレハブ
     [SerializeField] private PlayerAnimationController animController;
+    [SerializeField] private GameObject particleObj; // パーティクルのオブジェクトを指定
+    [SerializeField] private GameObject particleObj2;
+    public bool isParticleActive = false; // パーティクルのオンオフを制御するフラグ
+
     public Vector3 startPosition;
 
     [Header("コントローラー設定")] // ★追加
@@ -30,6 +34,11 @@ public class PlayerScript2 : MonoBehaviour
     private bool isBlockMoving = false;  // ブロックが移動中か
     private Vector3 currentPosition;
 
+    void Awake()
+    {
+        particleObj.SetActive(false);
+        particleObj2.SetActive(false);
+    }
     void Update()
     {
         // ★修正：何よりも最優先で溜め入力を監視する（移動中であっても溜められる！）
@@ -112,10 +121,10 @@ public class PlayerScript2 : MonoBehaviour
     private Vector3Int GetDirectionInput()
     {
         // --- ① キーボード入力（従来通り。押した瞬間のみ反応） ---
-        if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W)) return Vector3Int.up;
-        if (Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.S)) return Vector3Int.down;
-        if (Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.A)) return Vector3Int.left;
-        if (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.D)) return Vector3Int.right;
+        if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W)) {ResetCharge();PlayerAnimationController.Instance.SetState(PlayerAnimationController.AnimState.Idle, force: false);  return Vector3Int.up; }
+        if (Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.S)) {ResetCharge(); PlayerAnimationController.Instance.SetState(PlayerAnimationController.AnimState.Idle, force: false); return Vector3Int.down; }
+        if (Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.A)) {ResetCharge(); PlayerAnimationController.Instance.SetState(PlayerAnimationController.AnimState.Idle, force: false); return Vector3Int.left; }
+        if (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.D)) {ResetCharge(); PlayerAnimationController.Instance.SetState(PlayerAnimationController.AnimState.Idle, force: false); return Vector3Int.right; }
 
         // --- ② コントローラー入力（Gamepad.current が null なら接続なし） ---
         if (Gamepad.current == null) return Vector3Int.zero;
@@ -177,7 +186,7 @@ public class PlayerScript2 : MonoBehaviour
     private void HandleCharge()
     {
         if (isBlockMoving) return;
-
+        
         // ★変更：キーボードのSpace、またはコントローラーのSouthボタン(Aボタン/×ボタン)で溜め
         bool chargeButtonPressed = Input.GetKeyDown(KeyCode.Space);
         if (!chargeButtonPressed && Gamepad.current != null)
@@ -202,12 +211,16 @@ public class PlayerScript2 : MonoBehaviour
                 case 1:
                     Debug.Log("【パワー：1段階】木箱を 2 個同時に押せます！");
                     if (animController != null)
-                        animController.SetState(PlayerAnimationController.AnimState.Charge1);
+                        //パーティクルをひょーじゅ
+                        particleObj2.SetActive(true);
+                    animController.SetState(PlayerAnimationController.AnimState.Charge1);
                     break;
                 case 2:
                     Debug.Log("【パワー：2段階】木箱を 3 個同時に押せます！！");
                     if (animController != null)
-                        animController.SetState(PlayerAnimationController.AnimState.Charge2);
+                        particleObj2.SetActive(false);
+                        particleObj.SetActive(true);
+                    animController.SetState(PlayerAnimationController.AnimState.Charge2);
                     break;
             }
         }
@@ -215,9 +228,12 @@ public class PlayerScript2 : MonoBehaviour
     //溜め状態を完全にゼロ（通常パワー）に戻す
     private void ResetCharge()
     {
+        //パーティクルを非表示
         spacePressedTime = 0f;
         chargeLevel = 0; // ← ここで確実に通常状態（1個押し）に戻します！
         Debug.Log("【パワー消費】通常状態に戻りました。再チャージが必要です。");
+        particleObj.SetActive(false);
+        particleObj.SetActive(false);
     }
     // --- プレイヤーを1マス滑らかに動かす処理 ---
     private IEnumerator MovePlayerRoutine(Vector3 targetPos)

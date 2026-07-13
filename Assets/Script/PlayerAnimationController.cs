@@ -3,6 +3,9 @@ using System;
 
 public class PlayerAnimationController : MonoBehaviour
 {
+
+
+    public static PlayerAnimationController Instance { get; private set; }
     public enum AnimState
     {
         Idle,
@@ -44,6 +47,7 @@ public class PlayerAnimationController : MonoBehaviour
 
     private void Awake()
     {
+        if (Instance == null) Instance = this;
         if (spriteRenderer == null)
             spriteRenderer = GetComponent<SpriteRenderer>();
 
