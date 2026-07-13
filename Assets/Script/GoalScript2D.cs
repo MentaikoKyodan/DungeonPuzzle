@@ -128,7 +128,7 @@ public class GoalScript2D : MonoBehaviour
             return;
         }
 
-        var player = FindFirstObjectByType<PlayerScript>();
+        var player = FindFirstObjectByType<PlayerScript2>();
         Vector3 center = player != null ? player.transform.position : transform.position;
 
         ScreenTransitionManager.Instance.TransitionToScene(nextSceneName, center);

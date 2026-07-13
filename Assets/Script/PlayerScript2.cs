@@ -20,11 +20,22 @@ public class PlayerScript2 : MonoBehaviour
 
     public Vector3 startPosition;
 
-    [Header("コントローラー設定")] // ★追加
+    [Header("コントローラー設定")]
     [Tooltip("スティックをこの値以上倒したら方向入力とみなす")]
     [SerializeField, Range(0.1f, 0.9f)] private float stickThreshold = 0.5f;
     // スティックが一度ニュートラルに戻るまで連続入力させないためのフラグ
     private bool stickWasNeutral = true;
+
+    [Header("SE設定")] // ★追加
+    [SerializeField] private AudioClip charge1Sound;
+    [SerializeField] private AudioClip charge2Sound;
+    [SerializeField] private AudioClip punchSound;
+
+    [Header("カメラシェイク設定")] // ★追加
+    [SerializeField] private float charge1ShakeMagnitude = 0.05f;
+    [SerializeField] private float charge1ShakeDuration = 0.15f;
+    [SerializeField] private float charge2ShakeMagnitude = 0.12f;
+    [SerializeField] private float charge2ShakeDuration = 0.2f;
 
     // --- 溜め機能用の変数 ---
     private float spacePressedTime = 0f;
@@ -39,15 +50,16 @@ public class PlayerScript2 : MonoBehaviour
         particleObj.SetActive(false);
         particleObj2.SetActive(false);
     }
+
     void Update()
     {
-        // ★修正：何よりも最優先で溜め入力を監視する（移動中であっても溜められる！）
+        // ★何よりも最優先で溜め入力を監視する（移動中であっても溜められる！）
         HandleCharge();
         // プレイヤー自身、またはブロックが移動中なら、新しい入力を受け付けない
         if (isPlayerMoving || isBlockMoving) return;
 
         // 押された方向キーを判別する（キーボード＋コントローラー対応）
-        Vector3Int direction = GetDirectionInput(); // ★変更：判定処理を関数化
+        Vector3Int direction = GetDirectionInput();
 
         // キーが押された場合の処理
         if (direction != Vector3Int.zero)
@@ -60,6 +72,7 @@ public class PlayerScript2 : MonoBehaviour
                     animController.SetFacing(false);
                 // 上下の場合は向きそのまま
             }
+
             Vector3Int currentCell = targetGrid.WorldToCell(transform.position);
             Vector3Int targetCell = currentCell + direction;
             Vector3 targetPosition = targetGrid.GetCellCenterWorld(targetCell);
@@ -89,6 +102,7 @@ public class PlayerScript2 : MonoBehaviour
                         animController.SetState(PlayerAnimationController.AnimState.Idle);
                     return;
                 }
+
                 // 連なっているブロックの「さらに一歩先」の座標を計算
                 Vector3Int finalBlockCell = connectedBlocks[connectedBlocks.Count - 1];
                 Vector3Int checkNextCell = finalBlockCell + direction;
@@ -112,19 +126,28 @@ public class PlayerScript2 : MonoBehaviour
                 return;
             }
 
-            // 1マス先が「壁」でも「ブロック」でもない（ただの空き地）なら、自分が1マス進む
-            StartCoroutine(MovePlayerRoutine(targetPosition));
+            // 1マス先が「壁」でも「ブロック」でもない（ただの空き地）
+            if (chargeLevel > 0)
+            {
+                // 溜めた状態で移動しようとしたら、何もなくても攻撃だけは出す
+                StartCoroutine(PunchThenMoveRoutine(targetPosition));
+                ResetCharge();
+            }
+            else
+            {
+                StartCoroutine(MovePlayerRoutine(targetPosition));
+            }
         }
     }
 
-    // ★追加：キーボードとコントローラーの入力をまとめて判定する関数
+    // ★キーボードとコントローラーの入力をまとめて判定する関数
     private Vector3Int GetDirectionInput()
     {
-        // --- ① キーボード入力（従来通り。押した瞬間のみ反応） ---
-        if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W)) {ResetCharge();PlayerAnimationController.Instance.SetState(PlayerAnimationController.AnimState.Idle, force: false);  return Vector3Int.up; }
-        if (Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.S)) {ResetCharge(); PlayerAnimationController.Instance.SetState(PlayerAnimationController.AnimState.Idle, force: false); return Vector3Int.down; }
-        if (Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.A)) {ResetCharge(); PlayerAnimationController.Instance.SetState(PlayerAnimationController.AnimState.Idle, force: false); return Vector3Int.left; }
-        if (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.D)) {ResetCharge(); PlayerAnimationController.Instance.SetState(PlayerAnimationController.AnimState.Idle, force: false); return Vector3Int.right; }
+        // --- ① キーボード入力（押した瞬間のみ反応） ---
+        if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W)) return Vector3Int.up;
+        if (Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.S)) return Vector3Int.down;
+        if (Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.A)) return Vector3Int.left;
+        if (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.D)) return Vector3Int.right;
 
         // --- ② コントローラー入力（Gamepad.current が null なら接続なし） ---
         if (Gamepad.current == null) return Vector3Int.zero;
@@ -156,24 +179,29 @@ public class PlayerScript2 : MonoBehaviour
             return rawInput.y > 0 ? Vector3Int.up : Vector3Int.down;
     }
 
-    // --- 溜め入力の処理 ---
-    // ★追加：殴りアニメを再生してから、ブロックを実際に動かす
+    // --- 殴りアニメを再生してから、ブロックを実際に動かす ---
     private IEnumerator PunchAndPushRoutine(List<Vector3Int> blockList, Vector3Int direction)
     {
         isBlockMoving = true;
 
         if (animController != null)
         {
-            bool punchFinished = false;
-            System.Action onFinished = () => { punchFinished = true; };
+            bool impactHappened = false;
+            System.Action onImpact = () =>
+            {
+                impactHappened = true;
+                // ★殴った瞬間にSE
+                if (SEManager.Instance != null)
+                    SEManager.Instance.PlaySE(punchSound);
+            };
 
-            animController.OnNonLoopAnimFinished += onFinished;
+            animController.OnAnimImpact += onImpact;
             animController.SetState(PlayerAnimationController.AnimState.Punch);
 
-            while (!punchFinished)
+            while (!impactHappened)
                 yield return null;
 
-            animController.OnNonLoopAnimFinished -= onFinished;
+            animController.OnAnimImpact -= onImpact;
         }
 
         yield return StartCoroutine(MoveMultipleBlocksRoutine(blockList, direction));
@@ -183,11 +211,12 @@ public class PlayerScript2 : MonoBehaviour
 
         isBlockMoving = false;
     }
+
     private void HandleCharge()
     {
         if (isBlockMoving) return;
-        
-        // ★変更：キーボードのSpace、またはコントローラーのSouthボタン(Aボタン/×ボタン)で溜め
+
+        // キーボードのSpace、またはコントローラーのSouthボタン(Aボタン/×ボタン)で溜め
         bool chargeButtonPressed = Input.GetKeyDown(KeyCode.Space);
         if (!chargeButtonPressed && Gamepad.current != null)
         {
@@ -211,30 +240,44 @@ public class PlayerScript2 : MonoBehaviour
                 case 1:
                     Debug.Log("【パワー：1段階】木箱を 2 個同時に押せます！");
                     if (animController != null)
-                        //パーティクルをひょーじゅ
                         particleObj2.SetActive(true);
                     animController.SetState(PlayerAnimationController.AnimState.Charge1);
+
+                    // ★SEとシェイク
+                    if (SEManager.Instance != null)
+                        SEManager.Instance.PlaySE(charge1Sound);
+                    if (CameraShake.Instance != null)
+                        CameraShake.Instance.Shake(charge1ShakeMagnitude, charge1ShakeDuration);
                     break;
                 case 2:
                     Debug.Log("【パワー：2段階】木箱を 3 個同時に押せます！！");
                     if (animController != null)
+                    {
                         particleObj2.SetActive(false);
                         particleObj.SetActive(true);
+                    }
                     animController.SetState(PlayerAnimationController.AnimState.Charge2);
+
+                    // ★SEとシェイク
+                    if (SEManager.Instance != null)
+                        SEManager.Instance.PlaySE(charge2Sound);
+                    if (CameraShake.Instance != null)
+                        CameraShake.Instance.Shake(charge2ShakeMagnitude, charge2ShakeDuration);
                     break;
             }
         }
     }
-    //溜め状態を完全にゼロ（通常パワー）に戻す
+
+    // 溜め状態を完全にゼロ（通常パワー）に戻す
     private void ResetCharge()
     {
-        //パーティクルを非表示
         spacePressedTime = 0f;
         chargeLevel = 0; // ← ここで確実に通常状態（1個押し）に戻します！
         Debug.Log("【パワー消費】通常状態に戻りました。再チャージが必要です。");
         particleObj.SetActive(false);
         particleObj2.SetActive(false);
     }
+
     // --- プレイヤーを1マス滑らかに動かす処理 ---
     private IEnumerator MovePlayerRoutine(Vector3 targetPos)
     {
@@ -254,7 +297,38 @@ public class PlayerScript2 : MonoBehaviour
         isPlayerMoving = false;
     }
 
-    // --- ★超絶強化：連なった複数のブロックを同時に滑らかに動かす処理 ---
+    // --- 溜めてる時に空振りで前進する用（殴ってから移動） ---
+    private IEnumerator PunchThenMoveRoutine(Vector3 targetPos)
+    {
+        isPlayerMoving = true; // 殴ってる間も入力ブロックしておく
+
+        if (animController != null)
+        {
+            bool impactHappened = false;
+            System.Action onImpact = () =>
+            {
+                impactHappened = true;
+                // ★殴った瞬間にSE（空振りでも鳴らす）
+                if (SEManager.Instance != null)
+                    SEManager.Instance.PlaySE(punchSound);
+            };
+
+            animController.OnAnimImpact += onImpact;
+            animController.SetState(PlayerAnimationController.AnimState.Punch);
+
+            while (!impactHappened)
+                yield return null;
+
+            animController.OnAnimImpact -= onImpact;
+        }
+
+        yield return StartCoroutine(MovePlayerRoutine(targetPos)); // これがisPlayerMovingをfalseに戻してくれる
+
+        if (animController != null)
+            animController.SetState(PlayerAnimationController.AnimState.Idle);
+    }
+
+    // --- 連なった複数のブロックを同時に滑らかに動かす処理 ---
     private IEnumerator MoveMultipleBlocksRoutine(List<Vector3Int> blockList, Vector3Int direction)
     {
         isBlockMoving = true;
@@ -284,7 +358,7 @@ public class PlayerScript2 : MonoBehaviour
             SpriteRenderer sr = dummy.GetComponent<SpriteRenderer>();
             if (sr != null) sr.sprite = blockTilemap.GetSprite(fromCell);
 
-            // ★ここが今回の追加分：動いてる間だけ当たり判定を持たせる
+            // 動いてる間だけ当たり判定を持たせる
             BoxCollider2D col = dummy.GetComponent<BoxCollider2D>();
             if (col == null) col = dummy.AddComponent<BoxCollider2D>();
             col.isTrigger = false;
@@ -330,7 +404,7 @@ public class PlayerScript2 : MonoBehaviour
         isBlockMoving = false;
     }
 
-    // ★追加：LayerMaskからレイヤー番号を取り出すヘルパー
+    // ★LayerMaskからレイヤー番号を取り出すヘルパー
     private int GetLayerFromMask(LayerMask mask)
     {
         int layerNumber = 0;
@@ -342,15 +416,15 @@ public class PlayerScript2 : MonoBehaviour
         }
         return layerNumber;
     }
+
     public void ResetToStart(Vector3Int nextCell)
     {
         Debug.Log("Resetting player to start position.");
         transform.position = startPosition;
-        // startPosition (Vector3) を Vector3Int に変換して nextCell に代入
-        //nextCell = Vector3Int.RoundToInt(startPosition);
         currentPosition = startPosition;
     }
-    // ★新しく追加：指定した方向に向かって、ブロックが何個連なっているかを調べる関数
+
+    // ★指定した方向に向かって、ブロックが何個連なっているかを調べる関数
     private List<Vector3Int> GetConnectedBlocks(Vector3Int startCell, Vector3Int direction)
     {
         List<Vector3Int> blockCells = new List<Vector3Int>();

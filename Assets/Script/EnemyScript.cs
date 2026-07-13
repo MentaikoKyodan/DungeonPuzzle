@@ -90,15 +90,13 @@ public class EnemyScript : MonoBehaviour
         if (other == null) return;
         if (!other.CompareTag(targetTag)) return;
 
-        PlayerScript player = other.GetComponent<PlayerScript>();
+        PlayerScript2 player = other.GetComponent<PlayerScript2>(); // ★変更
         if (player != null)
         {
-            // PlayerScript.ResetToStart now expects a Vector3Int parameter.
-            // Convert the player's recorded startPosition (Vector3) to cell coordinates.
             player.ResetToStart(Vector3Int.RoundToInt(player.startPosition));
         }
     }
-    
+
     //直線のセンサー
     void Start()
     {
@@ -120,10 +118,9 @@ public class EnemyScript : MonoBehaviour
         if (isDetectedNow && !wasDetected)
         {
             Debug.Log("プレイヤー検知！TriggerDetectionを呼ぶよ");
-            PlayerScript player = hit.collider.GetComponent<PlayerScript>();
+            PlayerScript2 player = hit.collider.GetComponent<PlayerScript2>(); // ★変更
             if (player != null)
             {
-                // Use the player's startPosition converted to cell coordinates
                 TriggerDetection(player);
             }
         }
@@ -152,7 +149,7 @@ public class EnemyScript : MonoBehaviour
     /// 検知時の処理をまとめたメソッド
     /// ScreenTransitionManagerにプレイヤー位置を渡してゲームオーバー演出を起動する
     /// </summary>
-    private void TriggerDetection(PlayerScript player)
+    private void TriggerDetection(PlayerScript2 player)
     {
         if (ScreenTransitionManager.Instance != null)
         {
