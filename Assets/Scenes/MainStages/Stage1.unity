@@ -2276,6 +2276,8 @@ MonoBehaviour:
   spriteRenderer: {fileID: 0}
   lockedColor: {r: 1, g: 0, b: 0, a: 1}
   unlockedColor: {r: 1, g: 1, b: 1, a: 1}
+  lockedSprite: {fileID: 0}
+  unlockedSprite: {fileID: 0}
   loadNextScene: 1
   nextSceneName: StageSelectScene
   loadDelay: 0.1
@@ -2369,6 +2371,7 @@ GameObject:
   - component: {fileID: 563779861}
   - component: {fileID: 563779860}
   - component: {fileID: 563779863}
+  - component: {fileID: 563779864}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -2494,6 +2497,18 @@ MonoBehaviour:
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
   m_Version: 2
+--- !u!114 &563779864
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 563779859}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9f25cdbb64046654990da967f4d05633, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SEManager
 --- !u!1 &700338780
 GameObject:
   m_ObjectHideFlags: 0
@@ -4016,6 +4031,14 @@ MonoBehaviour:
   isParticleActive: 0
   startPosition: {x: 0, y: 0, z: 0}
   stickThreshold: 0.5
+  maxHistoryCount: 50
+  charge1Sound: {fileID: 8300000, guid: f1fe8ef41bc090a4599b6746ace29eeb, type: 3}
+  charge2Sound: {fileID: 8300000, guid: 4232f3d6f9b27984f88c464c4ae78fc9, type: 3}
+  punchSound: {fileID: 8300000, guid: 3a64137320e0ee34687b6b79c3235a68, type: 3}
+  charge1ShakeMagnitude: 0.02
+  charge1ShakeDuration: 0.15
+  charge2ShakeMagnitude: 0.12
+  charge2ShakeDuration: 0.2
 --- !u!1 &884678371
 GameObject:
   m_ObjectHideFlags: 0
@@ -4254,6 +4277,50 @@ Canvas:
   m_SortingLayerID: 0
   m_SortingOrder: 0
   m_TargetDisplay: 0
+--- !u!1 &1195233790
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1195233792}
+  - component: {fileID: 1195233791}
+  m_Layer: 0
+  m_Name: SEManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1195233791
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1195233790}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9f25cdbb64046654990da967f4d05633, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SEManager
+--- !u!4 &1195233792
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1195233790}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -2.72908, y: 2.65667, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1363178034
 GameObject:
   m_ObjectHideFlags: 0
@@ -14295,3 +14362,4 @@ SceneRoots:
   - {fileID: 1014043027}
   - {fileID: 226834852}
   - {fileID: 1489310228}
+  - {fileID: 1195233792}

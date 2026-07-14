@@ -225,16 +225,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GoalScript2D
   targetTag: Player
-  startLocked: 0
+  startLocked: 1
   requiredButtonCount: 1
   spriteRenderer: {fileID: 0}
-  lockedColor: {r: 1, g: 0, b: 0, a: 1}
+  lockedColor: {r: 1, g: 1, b: 1, a: 1}
   unlockedColor: {r: 1, g: 1, b: 1, a: 1}
+  lockedSprite: {fileID: -56026488374271319, guid: e8a0255508ca5f84490490f8e9d3f847, type: 3}
+  unlockedSprite: {fileID: 4959093990783912224, guid: aea9c58907716e74ea28363a70a5367b, type: 3}
   loadNextScene: 1
   nextSceneName: StageSelectScene
   loadDelay: 0.1
   stageIndex: 7
-  goalSound: {fileID: 0}
+  goalSound: {fileID: 8300000, guid: 1d762dfe8e682c345bb50201087bb311, type: 3}
   goalEffectPrefab: {fileID: 0}
   goalUI: {fileID: 0}
 --- !u!212 &17999658
@@ -342,9 +344,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ScreenTransitionManager
   blackOverlay: {fileID: 1990275748}
   irisMask: {fileID: 1218215544}
-  irisOutDuration: 0.7
-  irisInDuration: 0.7
-  sirenClip: {fileID: 0}
+  irisOutDuration: 0.8
+  irisInDuration: 0.8
+  sirenClip: {fileID: 8300000, guid: 182135a556f2c104fbc8c2c9a91d48cf, type: 3}
   transitionCanvas: {fileID: 2113096786}
   redFlashImage: {fileID: 1445761819}
   flashDuration: 0.4
@@ -602,6 +604,7 @@ GameObject:
   - component: {fileID: 216779860}
   - component: {fileID: 216779859}
   - component: {fileID: 216779858}
+  - component: {fileID: 216779861}
   m_Layer: 0
   m_Name: Button
   m_TagString: Untagged
@@ -628,8 +631,8 @@ MonoBehaviour:
   spriteRenderer: {fileID: 216779859}
   idleColor: {r: 0, g: 1, b: 0, a: 1}
   pressedColor: {r: 0.2, g: 0.6, b: 0.2, a: 1}
-  pressSE: {fileID: 0}
-  audioSource: {fileID: 0}
+  pressSE: {fileID: 8300000, guid: ec895a256e55d914bb7ea9b7cdaaddc2, type: 3}
+  audioSource: {fileID: 216779861}
   relockOnRelease: 0
 --- !u!212 &216779859
 SpriteRenderer:
@@ -680,7 +683,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -2413806693520163455, guid: a86470a33a6bf42c4b3595704624658b, type: 3}
+  m_Sprite: {fileID: 649223268058989734, guid: 248880871ce6b644fb8540359384260a, type: 3}
   m_Color: {r: 0, g: 0.85660374, b: 0.043900926, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -699,12 +702,109 @@ Transform:
   m_GameObject: {fileID: 216779857}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 8.09, y: 0.63, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalPosition: {x: 8.115, y: 0.63, z: 0}
+  m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!82 &216779861
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 216779857}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 0}
+  m_audioClip: {fileID: 0}
+  m_Resource: {fileID: 0}
+  m_PlayOnAwake: 1
+  m_Volume: 1
+  m_Pitch: 1
+  Loop: 0
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 1
+  MinDistance: 1
+  MaxDistance: 500
+  Pan2D: 0
+  rolloffMode: 0
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!1 &375919073
 GameObject:
   m_ObjectHideFlags: 0
@@ -2076,6 +2176,7 @@ GameObject:
   - component: {fileID: 634752830}
   - component: {fileID: 634752829}
   - component: {fileID: 634752828}
+  - component: {fileID: 634752832}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -2201,6 +2302,18 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &634752832
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 634752827}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8967f14b59fb7794797fcc383b7cca91, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CameraShake
 --- !u!1 &1119862803
 GameObject:
   m_ObjectHideFlags: 0
@@ -2248,6 +2361,14 @@ MonoBehaviour:
   isParticleActive: 0
   startPosition: {x: 0, y: 0, z: 0}
   stickThreshold: 0.5
+  maxHistoryCount: 50
+  charge1Sound: {fileID: 8300000, guid: f1fe8ef41bc090a4599b6746ace29eeb, type: 3}
+  charge2Sound: {fileID: 8300000, guid: 4232f3d6f9b27984f88c464c4ae78fc9, type: 3}
+  punchSound: {fileID: 8300000, guid: 3a64137320e0ee34687b6b79c3235a68, type: 3}
+  charge1ShakeMagnitude: 0.02
+  charge1ShakeDuration: 0.15
+  charge2ShakeMagnitude: 0.12
+  charge2ShakeDuration: 0.2
 --- !u!50 &1119862805
 Rigidbody2D:
   serializedVersion: 5
@@ -2337,6 +2458,50 @@ Transform:
   - {fileID: 1789091700}
   - {fileID: 1359171960}
   - {fileID: 1773046500}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1124436663
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1124436665}
+  - component: {fileID: 1124436664}
+  m_Layer: 0
+  m_Name: SEManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1124436664
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1124436663}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9f25cdbb64046654990da967f4d05633, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SEManager
+--- !u!4 &1124436665
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1124436663}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -2.72908, y: 2.65667, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1143458606
@@ -12721,7 +12886,7 @@ MonoBehaviour:
   pushAnim:
     frames:
     - {fileID: -4509506210544505328, guid: 75a994f54b8b84b42bc458995f4e6693, type: 3}
-    frameInterval: 0.15
+    frameInterval: 0.12
     loop: 0
     impactFrame: 0
   charge1Anim:
@@ -12739,7 +12904,7 @@ MonoBehaviour:
   punchAnim:
     frames:
     - {fileID: -4509506210544505328, guid: 75a994f54b8b84b42bc458995f4e6693, type: 3}
-    frameInterval: 0.15
+    frameInterval: 0.12
     loop: 0
     impactFrame: 0
 --- !u!212 &1789091699
@@ -13785,3 +13950,4 @@ SceneRoots:
   - {fileID: 74927747}
   - {fileID: 1401366710}
   - {fileID: 1704537657}
+  - {fileID: 1124436665}

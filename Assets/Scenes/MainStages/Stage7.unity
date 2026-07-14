@@ -119,6 +119,50 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &12547326
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 12547328}
+  - component: {fileID: 12547327}
+  m_Layer: 0
+  m_Name: SEManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &12547327
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 12547326}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9f25cdbb64046654990da967f4d05633, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SEManager
+--- !u!4 &12547328
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 12547326}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -2.72908, y: 2.65667, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &22723823
 GameObject:
   m_ObjectHideFlags: 0
@@ -9881,7 +9925,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -2413806693520163455, guid: a86470a33a6bf42c4b3595704624658b, type: 3}
+  m_Sprite: {fileID: 649223268058989734, guid: 248880871ce6b644fb8540359384260a, type: 3}
   m_Color: {r: 0, g: 0.85660374, b: 0.043900926, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -9901,8 +9945,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0.62, y: 0.63, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -11898,16 +11942,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GoalScript2D
   targetTag: Player
-  startLocked: 0
+  startLocked: 1
   requiredButtonCount: 1
   spriteRenderer: {fileID: 0}
-  lockedColor: {r: 1, g: 0, b: 0, a: 1}
+  lockedColor: {r: 1, g: 1, b: 1, a: 1}
   unlockedColor: {r: 1, g: 1, b: 1, a: 1}
+  lockedSprite: {fileID: -135748286986332754, guid: cf6996349099d4b439a96d2c73f1d5aa, type: 3}
+  unlockedSprite: {fileID: -8043838872802352379, guid: b5c13921ef127f942bc4397d24763149, type: 3}
   loadNextScene: 1
   nextSceneName: StageSelectScene
   loadDelay: 0.1
   stageIndex: 6
-  goalSound: {fileID: 0}
+  goalSound: {fileID: 8300000, guid: 1d762dfe8e682c345bb50201087bb311, type: 3}
   goalEffectPrefab: {fileID: 0}
   goalUI: {fileID: 0}
 --- !u!212 &570004319
@@ -12285,6 +12331,7 @@ GameObject:
   - component: {fileID: 816599802}
   - component: {fileID: 816599801}
   - component: {fileID: 816599804}
+  - component: {fileID: 816599805}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -12410,6 +12457,18 @@ MonoBehaviour:
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
   m_Version: 2
+--- !u!114 &816599805
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 816599800}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8967f14b59fb7794797fcc383b7cca91, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CameraShake
 --- !u!1 &1013879127
 GameObject:
   m_ObjectHideFlags: 0
@@ -12502,6 +12561,14 @@ MonoBehaviour:
   isParticleActive: 0
   startPosition: {x: 0, y: 0, z: 0}
   stickThreshold: 0.5
+  maxHistoryCount: 50
+  charge1Sound: {fileID: 8300000, guid: f1fe8ef41bc090a4599b6746ace29eeb, type: 3}
+  charge2Sound: {fileID: 8300000, guid: 4232f3d6f9b27984f88c464c4ae78fc9, type: 3}
+  punchSound: {fileID: 8300000, guid: 3a64137320e0ee34687b6b79c3235a68, type: 3}
+  charge1ShakeMagnitude: 0.02
+  charge1ShakeDuration: 0.15
+  charge2ShakeMagnitude: 0.12
+  charge2ShakeDuration: 0.2
 --- !u!50 &1033128606
 Rigidbody2D:
   serializedVersion: 5
@@ -12715,9 +12782,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ScreenTransitionManager
   blackOverlay: {fileID: 313167898}
   irisMask: {fileID: 1098885275}
-  irisOutDuration: 0.7
-  irisInDuration: 0.7
-  sirenClip: {fileID: 0}
+  irisOutDuration: 0.8
+  irisInDuration: 0.8
+  sirenClip: {fileID: 8300000, guid: 182135a556f2c104fbc8c2c9a91d48cf, type: 3}
   transitionCanvas: {fileID: 496956470}
   redFlashImage: {fileID: 1778055132}
   flashDuration: 0.4
@@ -13187,7 +13254,7 @@ MonoBehaviour:
   pushAnim:
     frames:
     - {fileID: -4509506210544505328, guid: 75a994f54b8b84b42bc458995f4e6693, type: 3}
-    frameInterval: 0.15
+    frameInterval: 0.12
     loop: 0
     impactFrame: 0
   charge1Anim:
@@ -13205,7 +13272,7 @@ MonoBehaviour:
   punchAnim:
     frames:
     - {fileID: -4509506210544505328, guid: 75a994f54b8b84b42bc458995f4e6693, type: 3}
-    frameInterval: 0.15
+    frameInterval: 0.12
     loop: 0
     impactFrame: 0
 --- !u!212 &1862363151
@@ -15149,3 +15216,4 @@ SceneRoots:
   - {fileID: 1174779750}
   - {fileID: 1144186524}
   - {fileID: 553634029}
+  - {fileID: 12547328}
