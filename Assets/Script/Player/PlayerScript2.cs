@@ -88,6 +88,8 @@ public class PlayerScript2 : MonoBehaviour
             if (Physics2D.OverlapCircle(targetPosition, 0.4f, obstacleLayer))
             {
                 ResetCharge(); // 壁にぶつかったら溜めリセット
+                if (animController != null)
+                    animController.SetState(PlayerAnimationController.AnimState.Idle);
                 return;
             }
 
@@ -95,12 +97,10 @@ public class PlayerScript2 : MonoBehaviour
             if (Physics2D.OverlapCircle(targetPosition, 0.4f, blockLayer))
             {
                 // 現在のパワーで押せる最大個数（レベル0=1個, レベル1=2個, レベル2=3個）
-                int maxPushable = chargeLevel + 1;
+                int maxPushable = chargeLevel + 1;   // 同時に押せる個数（重さ）はそのまま
 
-                // 連なっているブロックの座標リストを取得する
                 List<Vector3Int> connectedBlocks = GetConnectedBlocks(targetCell, direction);
 
-                // もし連なっている数が、今のパワー（最大個数）を超えていたら重くて押せない！
                 if (connectedBlocks.Count > maxPushable)
                 {
                     Debug.Log($"ブロックが {connectedBlocks.Count} 個連なっています。パワーが足りません！");
@@ -110,21 +110,22 @@ public class PlayerScript2 : MonoBehaviour
                     return;
                 }
 
-                // 連なっているブロックの「さらに一歩先」の座標を計算
-                Vector3Int finalBlockCell = connectedBlocks[connectedBlocks.Count - 1];
-                Vector3Int checkNextCell = finalBlockCell + direction;
-                Vector3 checkNextPosition = targetGrid.GetCellCenterWorld(checkNextCell);
+                // 距離はパワーを個数で割ったもの（最低1マス）
+                int pushDistance = Mathf.Max(1, (chargeLevel + 1) / connectedBlocks.Count);
 
-                // その先が「壁」なら、いくらパワーがあっても押せない！
-                if (Physics2D.OverlapCircle(checkNextPosition, 0.4f, obstacleLayer))
+                //実際に押せる距離を調べる
+                int actualPushDistance = GetActualPushDistance(connectedBlocks, direction, pushDistance);
+
+                if (actualPushDistance <= 0)
                 {
-                    Debug.Log("ブロックの先が壁なので押せません！");
+                    Debug.Log("ブロックの先が塞がっているので押せません！");
                     ResetCharge();
                     if (animController != null)
                         animController.SetState(PlayerAnimationController.AnimState.Idle);
                     return;
                 }
-                //Undo用に「押す前」の状態を記録
+
+                // Undo用の記録（pushDistanceも保存するように変更）
                 List<TileBase> tilesBeforePush = new List<TileBase>();
                 foreach (var cell in connectedBlocks)
                     tilesBeforePush.Add(blockTilemap.GetTile(cell));
@@ -134,18 +135,17 @@ public class PlayerScript2 : MonoBehaviour
                     isBlockPush = true,
                     blockCellsBefore = new List<Vector3Int>(connectedBlocks),
                     pushDirection = direction,
+                    pushDistance = actualPushDistance,
                     blockTiles = tilesBeforePush
                 });
                 TrimHistory();
 
-                // すべての条件をクリア！連なったブロックたちをまとめて動かす
-                StartCoroutine(PunchAndPushRoutine(connectedBlocks, direction));
+                StartCoroutine(PunchAndPushRoutine(connectedBlocks, direction, actualPushDistance));
 
-                // ブロックを押したら溜めは消費される
                 ResetCharge();
                 return;
             }
-            // ★追加：Undo用に「移動前」の位置を記録
+            // Undo用に「移動前」の位置を記録
             historyStack.Push(new MoveRecord
             {
                 isBlockPush = false,
@@ -166,7 +166,7 @@ public class PlayerScript2 : MonoBehaviour
         }
     }
 
-    // ★キーボードとコントローラーの入力をまとめて判定する関数
+    //キーボードとコントローラーの入力をまとめて判定する関数
     private Vector3Int GetDirectionInput()
     {
         // --- ① キーボード入力（押した瞬間のみ反応） ---
@@ -246,7 +246,7 @@ public class PlayerScript2 : MonoBehaviour
             for (int i = 0; i < record.blockCellsBefore.Count; i++)
             {
                 Vector3Int originalCell = record.blockCellsBefore[i];
-                Vector3Int movedCell = originalCell + record.pushDirection;
+                Vector3Int movedCell = originalCell + record.pushDirection * record.pushDistance;
 
                 blockTilemap.SetTile(movedCell, null);
                 blockTilemap.SetTile(originalCell, record.blockTiles[i]);
@@ -269,7 +269,7 @@ public class PlayerScript2 : MonoBehaviour
         isUndoing = false;
     }
     // --- 殴りアニメを再生してから、ブロックを実際に動かす ---
-    private IEnumerator PunchAndPushRoutine(List<Vector3Int> blockList, Vector3Int direction)
+    private IEnumerator PunchAndPushRoutine(List<Vector3Int> blockList, Vector3Int direction, int pushDistance)
     {
         isBlockMoving = true;
 
@@ -279,7 +279,6 @@ public class PlayerScript2 : MonoBehaviour
             System.Action onImpact = () =>
             {
                 impactHappened = true;
-                // ★殴った瞬間にSE
                 if (SEManager.Instance != null)
                     SEManager.Instance.PlaySE(punchSound);
             };
@@ -293,7 +292,7 @@ public class PlayerScript2 : MonoBehaviour
             animController.OnAnimImpact -= onImpact;
         }
 
-        yield return StartCoroutine(MoveMultipleBlocksRoutine(blockList, direction));
+        yield return StartCoroutine(MoveMultipleBlocksRoutine(blockList, direction, pushDistance));
 
         if (animController != null)
             animController.SetState(PlayerAnimationController.AnimState.Idle);
@@ -303,7 +302,7 @@ public class PlayerScript2 : MonoBehaviour
 
     private void HandleCharge()
     {
-        if (isBlockMoving) return;
+        if (isBlockMoving || isPlayerMoving) return;
 
         // キーボードのSpace、またはコントローラーのSouthボタン(Aボタン/×ボタン)で溜め
         bool chargeButtonPressed = Input.GetKeyDown(KeyCode.Space);
@@ -314,12 +313,9 @@ public class PlayerScript2 : MonoBehaviour
 
         if (chargeButtonPressed)
         {
-            chargeLevel++;
+            if (chargeLevel >= 2) return;
 
-            if (chargeLevel > 2)
-            {
-                chargeLevel = 2;
-            }
+            chargeLevel++;
 
             switch (chargeLevel)
             {
@@ -418,7 +414,7 @@ public class PlayerScript2 : MonoBehaviour
     }
 
     // --- 連なった複数のブロックを同時に滑らかに動かす処理 ---
-    private IEnumerator MoveMultipleBlocksRoutine(List<Vector3Int> blockList, Vector3Int direction)
+    private IEnumerator MoveMultipleBlocksRoutine(List<Vector3Int> blockList, Vector3Int direction, int pushDistance)
     {
         isBlockMoving = true;
 
@@ -433,7 +429,7 @@ public class PlayerScript2 : MonoBehaviour
         for (int i = 0; i < blockList.Count; i++)
         {
             Vector3Int fromCell = blockList[i];
-            Vector3Int toCell = fromCell + direction;
+            Vector3Int toCell = fromCell + direction * pushDistance;
 
             originalTiles.Add(blockTilemap.GetTile(fromCell));
             nextCells.Add(toCell);
@@ -493,7 +489,7 @@ public class PlayerScript2 : MonoBehaviour
         isBlockMoving = false;
     }
 
-    // ★LayerMaskからレイヤー番号を取り出すヘルパー
+    // LayerMaskからレイヤー番号を取り出すヘルパー
     private int GetLayerFromMask(LayerMask mask)
     {
         int layerNumber = 0;
@@ -534,6 +530,37 @@ public class PlayerScript2 : MonoBehaviour
         public Vector3 playerPosBefore;
         public List<Vector3Int> blockCellsBefore;
         public Vector3Int pushDirection;
+        public int pushDistance;
         public List<TileBase> blockTiles;
+    }
+    // 何マス押せるか（壁や別のブロックにぶつかるまでの距離）を調べる
+    private int GetActualPushDistance(List<Vector3Int> connectedBlocks, Vector3Int direction, int maxDistance)
+    {
+        Vector3Int finalBlockCell = connectedBlocks[connectedBlocks.Count - 1];
+
+        for (int step = 1; step <= maxDistance; step++)
+        {
+            Vector3Int checkCell = finalBlockCell + direction * step;
+            Vector3 checkPos = targetGrid.GetCellCenterWorld(checkCell);
+
+            bool isObstacle = Physics2D.OverlapCircle(checkPos, 0.4f, obstacleLayer);
+            bool isOtherBlock = false;
+
+            if (!isObstacle)
+            {
+                Collider2D hit = Physics2D.OverlapCircle(checkPos, 0.4f, blockLayer);
+                if (hit != null)
+                {
+                    // 押されている本人たちではなく、本当に別のブロックかどうか確認
+                    if (!connectedBlocks.Contains(checkCell))
+                        isOtherBlock = true;
+                }
+            }
+
+            if (isObstacle || isOtherBlock)
+                return step - 1; // ここまでしか進めない
+        }
+
+        return maxDistance; // 最後まで何もなかった
     }
 }
