@@ -235,7 +235,7 @@ MonoBehaviour:
   loadNextScene: 1
   nextSceneName: StageSelectScene
   loadDelay: 0.1
-  stageIndex: 7
+  stageIndex: 8
   goalSound: {fileID: 8300000, guid: 1d762dfe8e682c345bb50201087bb311, type: 3}
   goalEffectPrefab: {fileID: 0}
   goalUI: {fileID: 0}
@@ -2303,6 +2303,7 @@ MonoBehaviour:
   animController: {fileID: 1789091698}
   particleObj: {fileID: 1359171957}
   particleObj2: {fileID: 1773046497}
+  canCharge: 1
   isParticleActive: 0
   startPosition: {x: 0, y: 0, z: 0}
   stickThreshold: 0.5
@@ -2314,6 +2315,13 @@ MonoBehaviour:
   charge1ShakeDuration: 0.15
   charge2ShakeMagnitude: 0.12
   charge2ShakeDuration: 0.2
+  hitEffectPrefab: {fileID: 0}
+  hitEffectSpeed: 2
+  hitEffectDelay: 0
+  hitEffectOffset: {x: 0, y: 0}
+  dustEffectPrefab: {fileID: 0}
+  dustEffectSpeed: 1
+  dustEffectOffset: {x: 0, y: 0}
 --- !u!50 &1119862805
 Rigidbody2D:
   serializedVersion: 5
