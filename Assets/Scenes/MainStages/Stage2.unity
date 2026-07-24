@@ -299,6 +299,7 @@ MonoBehaviour:
   animController: {fileID: 159875439}
   particleObj: {fileID: 974789274}
   particleObj2: {fileID: 911615678}
+  canCharge: 0
   isParticleActive: 0
   startPosition: {x: 0, y: 0, z: 0}
   stickThreshold: 0.5
@@ -310,6 +311,13 @@ MonoBehaviour:
   charge1ShakeDuration: 0.15
   charge2ShakeMagnitude: 0.12
   charge2ShakeDuration: 0.2
+  hitEffectPrefab: {fileID: 5416589598978119119, guid: 91f1fd223a4ae6249815187e769bc67b, type: 3}
+  hitEffectSpeed: 1.55
+  hitEffectDelay: 0.075
+  hitEffectOffset: {x: 0, y: 0.25}
+  dustEffectPrefab: {fileID: 238634050228096523, guid: d2beef5b5e956e44fbf88a756a0ad2d5, type: 3}
+  dustEffectSpeed: 1.1
+  dustEffectOffset: {x: 0, y: 0.5}
 --- !u!50 &221148639
 Rigidbody2D:
   serializedVersion: 5
@@ -14311,7 +14319,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &2028293540
 MonoBehaviour:
   m_ObjectHideFlags: 0

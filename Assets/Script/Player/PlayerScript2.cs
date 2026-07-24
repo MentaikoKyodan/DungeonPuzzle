@@ -16,6 +16,7 @@ public class PlayerScript2 : MonoBehaviour
     [SerializeField] private PlayerAnimationController animController;
     [SerializeField] private GameObject particleObj; // パーティクルのオブジェクトを指定
     [SerializeField] private GameObject particleObj2;
+    [SerializeField] private bool canCharge = true; //このステージで溜め攻撃を許可するか
     public bool isParticleActive = false; // パーティクルのオンオフを制御するフラグ
 
     public Vector3 startPosition;
@@ -32,17 +33,26 @@ public class PlayerScript2 : MonoBehaviour
     private Stack<MoveRecord> historyStack = new Stack<MoveRecord>();
     private bool isUndoing = false;
 
-    [Header("SE設定")] // ★追加
+    [Header("SE設定")]
     [SerializeField] private AudioClip charge1Sound;
     [SerializeField] private AudioClip charge2Sound;
     [SerializeField] private AudioClip punchSound;
 
-    [Header("カメラシェイク設定")] // ★追加
+    [Header("カメラシェイク設定")]
     [SerializeField] private float charge1ShakeMagnitude = 0.05f;
     [SerializeField] private float charge1ShakeDuration = 0.15f;
     [SerializeField] private float charge2ShakeMagnitude = 0.12f;
     [SerializeField] private float charge2ShakeDuration = 0.2f;
 
+    [Header("エフェクト設定")]
+    [SerializeField] private GameObject hitEffectPrefab; //殴った時に流すエフェクト
+    [SerializeField] private float hitEffectSpeed = 2f;
+    [SerializeField] private float hitEffectDelay = 0f;
+    [SerializeField] private Vector2 hitEffectOffset = Vector2.zero;
+
+    [SerializeField] private GameObject dustEffectPrefab; //土煙のプレハブ
+    [SerializeField] private float dustEffectSpeed = 1f;  //土煙の再生速度
+    [SerializeField] private Vector2 dustEffectOffset = Vector2.zero;
     // --- 溜め機能用の変数 ---
     private float spacePressedTime = 0f;
     private int chargeLevel = 0; // 0: 通常(1個), 1: 1段階(2個), 2: 2段階(3個)
@@ -60,7 +70,7 @@ public class PlayerScript2 : MonoBehaviour
     void Update()
     {
         HandleUndo();
-        // ★何よりも最優先で溜め入力を監視する（移動中であっても溜められる！）
+        //何よりも最優先で溜め入力を監視する（移動中であっても溜められる！）
         HandleCharge();
         // プレイヤー自身、またはブロックが移動中なら、新しい入力を受け付けない
         if (isPlayerMoving || isBlockMoving) return;
@@ -286,6 +296,9 @@ public class PlayerScript2 : MonoBehaviour
             animController.OnAnimImpact += onImpact;
             animController.SetState(PlayerAnimationController.AnimState.Punch);
 
+            // ★変更：impactを待たず、モーション開始と同時にエフェクトのタイマーを起動する
+            StartCoroutine(SpawnHitEffectsDelayed(blockList));
+
             while (!impactHappened)
                 yield return null;
 
@@ -313,6 +326,8 @@ public class PlayerScript2 : MonoBehaviour
 
         if (chargeButtonPressed)
         {
+            if (!canCharge) return; //溜め禁止ステージなら何もせず終了
+
             if (chargeLevel >= 2) return;
 
             chargeLevel++;
@@ -368,6 +383,8 @@ public class PlayerScript2 : MonoBehaviour
     {
         isPlayerMoving = true;
 
+        SpawnDustEffect(transform.position); //移動前の位置に土煙
+
         while (Vector3.Distance(transform.position, targetPos) > 0.01f)
         {
             transform.position = Vector3.MoveTowards(
@@ -421,6 +438,10 @@ public class PlayerScript2 : MonoBehaviour
         if (animController != null)
             animController.SetState(PlayerAnimationController.AnimState.Push);
 
+        foreach (var cell in blockList)
+        {
+            SpawnDustEffect(targetGrid.GetCellCenterWorld(cell));
+        }
         List<GameObject> dummies = new List<GameObject>();
         List<Vector3> endPositions = new List<Vector3>();
         List<TileBase> originalTiles = new List<TileBase>();
@@ -562,5 +583,40 @@ public class PlayerScript2 : MonoBehaviour
         }
 
         return maxDistance; // 最後まで何もなかった
+    }
+    //ブロックが元々あった場所にヒットエフェクトを出す
+    private IEnumerator SpawnHitEffectsDelayed(List<Vector3Int> blockList)
+    {
+        if (hitEffectDelay > 0f)
+            yield return new WaitForSeconds(hitEffectDelay);
+
+        SpawnHitEffects(blockList);
+    }
+
+    private void SpawnHitEffects(List<Vector3Int> blockList)
+    {
+        if (hitEffectPrefab == null) return;
+
+        foreach (var cell in blockList)
+        {
+            Vector3 pos = targetGrid.GetCellCenterWorld(cell) + (Vector3)hitEffectOffset; //オフセットを加算
+            GameObject effectInstance = Instantiate(hitEffectPrefab, pos, Quaternion.identity);
+
+            Animator anim = effectInstance.GetComponent<Animator>();
+            if (anim != null)
+            {
+                anim.speed = hitEffectSpeed;
+            }
+        }
+    }
+    //指定した位置に土煙エフェクトを出す
+    private void SpawnDustEffect(Vector3 pos)
+    {
+        if (dustEffectPrefab == null) return;
+
+        GameObject dust = Instantiate(dustEffectPrefab, pos + (Vector3)dustEffectOffset, Quaternion.identity);
+        Animator anim = dust.GetComponent<Animator>();
+        if (anim != null)
+            anim.speed = dustEffectSpeed;
     }
 }

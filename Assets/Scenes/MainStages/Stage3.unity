@@ -9325,6 +9325,7 @@ MonoBehaviour:
   animController: {fileID: 1806168330}
   particleObj: {fileID: 1895588962}
   particleObj2: {fileID: 735703085}
+  canCharge: 0
   isParticleActive: 0
   startPosition: {x: 0, y: 0, z: 0}
   stickThreshold: 0.5
