@@ -53,6 +53,11 @@ public class PlayerScript2 : MonoBehaviour
     [SerializeField] private GameObject dustEffectPrefab; //土煙のプレハブ
     [SerializeField] private float dustEffectSpeed = 1f;  //土煙の再生速度
     [SerializeField] private Vector2 dustEffectOffset = Vector2.zero;
+
+    [Header("溜めエフェクト設定")]
+    [SerializeField] private Animator chargeEffect1Animator; // particleObj2(1段階目)についてるAnimator
+    [SerializeField] private Animator chargeEffect2Animator; // particleObj(2段階目)についてるAnimator
+    [SerializeField] private Vector2 chargeEffectOffset = Vector2.zero;
     // --- 溜め機能用の変数 ---
     private float spacePressedTime = 0f;
     private int chargeLevel = 0; // 0: 通常(1個), 1: 1段階(2個), 2: 2段階(3個)
@@ -65,6 +70,9 @@ public class PlayerScript2 : MonoBehaviour
     {
         particleObj.SetActive(false);
         particleObj2.SetActive(false);
+
+        particleObj.transform.localPosition = chargeEffectOffset;
+        particleObj2.transform.localPosition = chargeEffectOffset;
     }
 
     void Update()
@@ -296,7 +304,7 @@ public class PlayerScript2 : MonoBehaviour
             animController.OnAnimImpact += onImpact;
             animController.SetState(PlayerAnimationController.AnimState.Punch);
 
-            // ★変更：impactを待たず、モーション開始と同時にエフェクトのタイマーを起動する
+            //impactを待たず、モーション開始と同時にエフェクトのタイマーを起動する
             StartCoroutine(SpawnHitEffectsDelayed(blockList));
 
             while (!impactHappened)
@@ -341,14 +349,19 @@ public class PlayerScript2 : MonoBehaviour
                     Debug.Log("【パワー：1段階】木箱を 2 個同時に押せます！");
                     if (animController != null)
                         particleObj2.SetActive(true);
+
+                    // 毎回最初のコマから再生し直す
+                    if (chargeEffect1Animator != null)
+                        chargeEffect1Animator.Play(0, 0, 0f);
+
                     animController.SetState(PlayerAnimationController.AnimState.Charge1);
 
-                    // ★SEとシェイク
                     if (SEManager.Instance != null)
                         SEManager.Instance.PlaySE(charge1Sound);
                     if (CameraShake.Instance != null)
                         CameraShake.Instance.Shake(charge1ShakeMagnitude, charge1ShakeDuration);
                     break;
+
                 case 2:
                     Debug.Log("【パワー：2段階】木箱を 3 個同時に押せます！！");
                     if (animController != null)
@@ -356,9 +369,13 @@ public class PlayerScript2 : MonoBehaviour
                         particleObj2.SetActive(false);
                         particleObj.SetActive(true);
                     }
+
+                    //毎回最初のコマから再生し直す
+                    if (chargeEffect2Animator != null)
+                        chargeEffect2Animator.Play(0, 0, 0f);
+
                     animController.SetState(PlayerAnimationController.AnimState.Charge2);
 
-                    // ★SEとシェイク
                     if (SEManager.Instance != null)
                         SEManager.Instance.PlaySE(charge2Sound);
                     if (CameraShake.Instance != null)
@@ -410,7 +427,7 @@ public class PlayerScript2 : MonoBehaviour
             System.Action onImpact = () =>
             {
                 impactHappened = true;
-                // ★殴った瞬間にSE（空振りでも鳴らす）
+                //殴った瞬間にSE（空振りでも鳴らす）
                 if (SEManager.Instance != null)
                     SEManager.Instance.PlaySE(punchSound);
             };
@@ -530,7 +547,7 @@ public class PlayerScript2 : MonoBehaviour
         currentPosition = startPosition;
     }
 
-    // ★指定した方向に向かって、ブロックが何個連なっているかを調べる関数
+    // 指定した方向に向かって、ブロックが何個連なっているかを調べる関数
     private List<Vector3Int> GetConnectedBlocks(Vector3Int startCell, Vector3Int direction)
     {
         List<Vector3Int> blockCells = new List<Vector3Int>();

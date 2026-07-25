@@ -274,17 +274,17 @@ public class ScreenTransitionManager : MonoBehaviour
 
     private void SetPlayerInputEnabled(bool enabled)
     {
-        var player = FindFirstObjectByType<PlayerScript>();
+        var player = FindFirstObjectByType<PlayerScript2>();
         if (player != null)
             player.enabled = enabled;
     }
 
     private Vector3 GetPlayerWorldPos()
     {
-        var player = FindFirstObjectByType<PlayerScript>();
+        var player = FindFirstObjectByType<PlayerScript2>();
         if (player == null)
         {
-            Debug.LogWarning("PlayerScriptが見つからなかった。アイリスの中心をVector3.zeroにするよ");
+            Debug.LogWarning("PlayerScript2が見つからなかった。アイリスの中心をVector3.zeroにするよ");
             return Vector3.zero;
         }
         return player.transform.position;
