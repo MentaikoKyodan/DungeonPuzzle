@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: b76d8d5399ec3ee4d9023ed344c7593c
+guid: 10e7627d3158c8d4d828448903f3dd0b
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -393672568197353540
-    second: stage1_0
+      213: 3293244873478811151
+    second: Respawn02_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -100,7 +100,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: stage1_0
+      name: Respawn02_0
       rect:
         serializedVersion: 2
         x: 320
@@ -115,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: cbfe7ce82e4698af0800000000000000
-      internalID: -393672568197353540
+      spriteID: f0ea41a93c4f3bd20800000000000000
+      internalID: 3293244873478811151
       vertices: []
       indices: 
       edges: []
@@ -135,7 +135,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      stage1_0: -393672568197353540
+      Respawn02_0: 3293244873478811151
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

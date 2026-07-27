@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: bc4b6d67db0043c49864df5671a6114b
+guid: 684753cff29e1fa44853a8d504c34cf4
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 7299627627088046500
-    second: risupon1_0
+      213: 4407898920186916902
+    second: Respawn01_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -100,7 +100,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: risupon1_0
+      name: Respawn01_0
       rect:
         serializedVersion: 2
         x: 312
@@ -115,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 4a9e539d6ac7d4560800000000000000
-      internalID: 7299627627088046500
+      spriteID: 620b19fb6b00c2d30800000000000000
+      internalID: 4407898920186916902
       vertices: []
       indices: 
       edges: []
@@ -135,7 +135,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      risupon1_0: 7299627627088046500
+      Respawn01_0: 4407898920186916902
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
