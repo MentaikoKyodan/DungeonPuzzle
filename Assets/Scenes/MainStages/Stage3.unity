@@ -9624,7 +9624,7 @@ MonoBehaviour:
   hitEffectOffset: {x: 0, y: 0.25}
   dustEffectPrefab: {fileID: 238634050228096523, guid: d2beef5b5e956e44fbf88a756a0ad2d5, type: 3}
   dustEffectSpeed: 1.1
-  dustEffectOffset: {x: 0, y: 0.5}
+  dustEffectOffset: {x: 0, y: 0.2}
   chargeEffect1Animator: {fileID: 0}
   chargeEffect2Animator: {fileID: 0}
   chargeEffectOffset: {x: 0, y: 0}
