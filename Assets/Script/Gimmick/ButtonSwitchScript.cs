@@ -28,6 +28,7 @@ public class ButtonSwitchScript : MonoBehaviour
     [SerializeField] private bool relockOnRelease = false;
 
     private bool isPressed = false;
+    private bool hasNotifiedGoal = false;
 
     private void Awake()
     {
@@ -52,7 +53,10 @@ public class ButtonSwitchScript : MonoBehaviour
                 audioSource.PlayOneShot(pressSE);
 
             if (GoalScript2D.Instance != null)
+            {
                 GoalScript2D.Instance.NotifyButtonPressed();
+                hasNotifiedGoal = true; // 通知したらここも更新
+            }
         }
         else if (!isPressedNow && isPressed)
         {
@@ -60,7 +64,30 @@ public class ButtonSwitchScript : MonoBehaviour
             spriteRenderer.color = idleColor;
 
             if (relockOnRelease && GoalScript2D.Instance != null)
+            {
                 GoalScript2D.Instance.NotifyButtonReleased();
+                hasNotifiedGoal = false; // ★通知したらここも更新
+            }
         }
+    }
+
+    public void ForceRefresh()
+    {
+        bool isPressedNow = Physics2D.OverlapCircle(transform.position, detectRadius, blockLayer);
+
+        // 見た目は常に現状に合わせる
+        isPressed = isPressedNow;
+        spriteRenderer.color = isPressed ? pressedColor : idleColor;
+
+        // ★比較対象はisPressedじゃなくhasNotifiedGoal
+        if (isPressedNow == hasNotifiedGoal) return;
+        if (GoalScript2D.Instance == null) return;
+
+        if (isPressedNow)
+            GoalScript2D.Instance.NotifyButtonPressed();
+        else
+            GoalScript2D.Instance.NotifyButtonReleased();
+
+        hasNotifiedGoal = isPressedNow; // 通知した状態を記録
     }
 }

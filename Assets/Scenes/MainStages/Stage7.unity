@@ -5033,11 +5033,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PauseManager
   pausePanel: {fileID: 765874944}
   respawnImage: {fileID: 777323846}
-  respawnNormalSprite: {fileID: 7299627627088046500, guid: bc4b6d67db0043c49864df5671a6114b, type: 3}
-  respawnSelectedSprite: {fileID: 540133534050445274, guid: 22a42bc8b976e334f8e02dd2f9b74d42, type: 3}
+  respawnNormalSprite: {fileID: 4407898920186916902, guid: 684753cff29e1fa44853a8d504c34cf4, type: 3}
+  respawnSelectedSprite: {fileID: 3293244873478811151, guid: 10e7627d3158c8d4d828448903f3dd0b, type: 3}
   stageSelectImage: {fileID: 317057735}
-  stageSelectNormalSprite: {fileID: -393672568197353540, guid: b76d8d5399ec3ee4d9023ed344c7593c, type: 3}
-  stageSelectSelectedSprite: {fileID: 3032400113675930684, guid: 18cd0bba1f0c1b745b2ce0d0ed3b0881, type: 3}
+  stageSelectNormalSprite: {fileID: 5328809334461181447, guid: 6f6d13238dddc62429adddeb1f3dd12b, type: 3}
+  stageSelectSelectedSprite: {fileID: 1403206776715168237, guid: adc4ef0b0e8e8804c990de62009332fd, type: 3}
   stageSelectSceneName: StageSelectScene
   playerScript: {fileID: 1429125854}
 --- !u!1 &1581104564

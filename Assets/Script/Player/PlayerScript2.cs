@@ -28,7 +28,6 @@ public class PlayerScript2 : MonoBehaviour
     private bool stickWasNeutral = true;
 
     [Header("Undo設定")]
-    [SerializeField] private int maxHistoryCount = 50;
 
     private Stack<MoveRecord> historyStack = new Stack<MoveRecord>();
     private bool isUndoing = false;
@@ -156,7 +155,6 @@ public class PlayerScript2 : MonoBehaviour
                     pushDistance = actualPushDistance,
                     blockTiles = tilesBeforePush
                 });
-                TrimHistory();
 
                 StartCoroutine(PunchAndPushRoutine(connectedBlocks, direction, actualPushDistance));
 
@@ -169,7 +167,6 @@ public class PlayerScript2 : MonoBehaviour
                 isBlockPush = false,
                 playerPosBefore = transform.position
             });
-            TrimHistory();
             // 1マス先が「壁」でも「ブロック」でもない（ただの空き地）
             if (chargeLevel > 0)
             {
@@ -242,15 +239,6 @@ public class PlayerScript2 : MonoBehaviour
     }
 
     //履歴が溜まりすぎないようにする
-    private void TrimHistory()
-    {
-        if (historyStack.Count <= maxHistoryCount) return;
-
-        var temp = historyStack.ToArray();
-        historyStack.Clear();
-        for (int i = temp.Length - 2; i >= 0; i--)
-            historyStack.Push(temp[i]);
-    }
 
     //直前の行動を取り消す
     private IEnumerator UndoRoutine()
@@ -269,6 +257,10 @@ public class PlayerScript2 : MonoBehaviour
                 blockTilemap.SetTile(movedCell, null);
                 blockTilemap.SetTile(originalCell, record.blockTiles[i]);
             }
+            yield return null;
+            //全ボタンの状態を強制的に再チェックする
+            foreach (var button in FindObjectsByType<ButtonSwitchScript>(FindObjectsSortMode.None))
+                button.ForceRefresh();
 
             if (animController != null)
                 animController.SetState(PlayerAnimationController.AnimState.Idle);
