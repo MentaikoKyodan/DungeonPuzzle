@@ -43,6 +43,9 @@ public class EnemyScript : MonoBehaviour
     [Tooltip("センサー線の描画順(小さいほど奥に表示される。ブロックなどのSprite Rendererより小さい値にすること)")]
     [SerializeField] private int sortingOrder = -1;
 
+    [Header("見た目差し替え用")]
+    [SerializeField] private Texture2D lineTexture;
+
     private LineRenderer lineRenderer;
 
     // 前のフレームでプレイヤーを検知していたかどうか(検知の切り替わり判定用)
@@ -79,11 +82,19 @@ public class EnemyScript : MonoBehaviour
         lineRenderer.startWidth = lineWidth;
         lineRenderer.endWidth = lineWidth;
         lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
+
+        if (lineTexture != null)
+            lineRenderer.material.mainTexture = lineTexture; //ここでイラスト適用
+
         lineRenderer.startColor = idleColor;
         lineRenderer.endColor = idleColor;
-        lineRenderer.sortingOrder = sortingOrder; // ブロックなどのSpriteより奥に描画されるようにする
+        lineRenderer.sortingOrder = sortingOrder;
     }
-
+    public void Initialize(SensorAxis axis, bool invert)
+    {
+        sensorAxis = axis;
+        invertDirection = invert;
+    }
     //範囲内に入ったらやり直し
     private void OnTriggerEnter2D(Collider2D other)
     {
@@ -118,7 +129,7 @@ public class EnemyScript : MonoBehaviour
         if (isDetectedNow && !wasDetected)
         {
             Debug.Log("プレイヤー検知！TriggerDetectionを呼ぶよ");
-            PlayerScript2 player = hit.collider.GetComponent<PlayerScript2>(); // ★変更
+            PlayerScript2 player = hit.collider.GetComponent<PlayerScript2>();
             if (player != null)
             {
                 TriggerDetection(player);
@@ -184,4 +195,5 @@ public class EnemyScript : MonoBehaviour
         Vector2 dir = GetSensorDirection();
         Gizmos.DrawLine(transform.position, transform.position + (Vector3)(dir * sensorLength));
     }
+
 }
