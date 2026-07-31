@@ -2,10 +2,10 @@ using UnityEngine;
 using TMPro;
 using System;
 
-public class TimerScript : MonoBehaviour
+public class Timer : MonoBehaviour
 {
     public TextMeshProUGUI timerText;
-    private float timeCount = 0f;
+    public float timeCount = 9454f;
 
     void Update()
     {
