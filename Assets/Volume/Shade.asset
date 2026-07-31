@@ -16,6 +16,7 @@ MonoBehaviour:
   - {fileID: 3282979379333385384}
   - {fileID: 5853579957873511328}
   - {fileID: 7281349783531124048}
+  - {fileID: 5563417799803859152}
 --- !u!114 &3282979379333385384
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -28,7 +29,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0b2db86121404754db890f4c8dfe81b2, type: 3}
   m_Name: Bloom
   m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.Bloom
-  active: 0
+  active: 1
   skipIterations:
     m_OverrideState: 0
     m_Value: 1
@@ -66,6 +67,34 @@ MonoBehaviour:
   dirtIntensity:
     m_OverrideState: 0
     m_Value: 0
+--- !u!114 &5563417799803859152
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c5e1dc532bcb41949b58bc4f2abfbb7e, type: 3}
+  m_Name: LensDistortion
+  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.LensDistortion
+  active: 1
+  intensity:
+    m_OverrideState: 1
+    m_Value: 0.2
+  xMultiplier:
+    m_OverrideState: 0
+    m_Value: 1
+  yMultiplier:
+    m_OverrideState: 0
+    m_Value: 1
+  center:
+    m_OverrideState: 0
+    m_Value: {x: 0.5, y: 0.5}
+  scale:
+    m_OverrideState: 0
+    m_Value: 1.03
 --- !u!114 &5853579957873511328
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -81,13 +110,13 @@ MonoBehaviour:
   active: 1
   type:
     m_OverrideState: 1
-    m_Value: 8
+    m_Value: 2
   intensity:
     m_OverrideState: 1
     m_Value: 1
   response:
     m_OverrideState: 1
-    m_Value: 1
+    m_Value: 0.412
   texture:
     m_OverrideState: 0
     m_Value: {fileID: 0}
@@ -112,7 +141,7 @@ MonoBehaviour:
     m_Value: -11
   colorFilter:
     m_OverrideState: 1
-    m_Value: {r: 0.91132075, g: 0.98522013, b: 1, a: 1}
+    m_Value: {r: 0.8556425, g: 0.9547169, b: 0.9252256, a: 1}
   hueShift:
     m_OverrideState: 0
     m_Value: 0
