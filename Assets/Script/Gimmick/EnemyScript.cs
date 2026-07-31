@@ -46,6 +46,9 @@ public class EnemyScript : MonoBehaviour
     [Header("見た目差し替え用")]
     [SerializeField] private Texture2D lineTexture;
 
+    [Header("SE設定")]
+    [SerializeField] private AudioClip detectSound;
+
     private LineRenderer lineRenderer;
 
     // 前のフレームでプレイヤーを検知していたかどうか(検知の切り替わり判定用)
@@ -162,13 +165,15 @@ public class EnemyScript : MonoBehaviour
     /// </summary>
     private void TriggerDetection(PlayerScript2 player)
     {
+        if (SEManager.Instance != null)
+            SEManager.Instance.PlaySE(detectSound);
+
         if (ScreenTransitionManager.Instance != null)
         {
             ScreenTransitionManager.Instance.TriggerGameOver(player.transform.position);
         }
         else
         {
-            // ScreenTransitionManagerがシーンにない場合の保険(直接リセット)
             Debug.LogWarning("ScreenTransitionManagerが見つからなかった。直接リセットするよ");
             player.ResetToStart(Vector3Int.RoundToInt(player.startPosition));
         }

@@ -47,7 +47,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyScript
   sensorAxis: 0
   invertDirection: 0
-  sensorLength: 10
+  sensorLength: 20
   targetTag: Player
   showGizmo: 1
   gizmoColor: {r: 1, g: 0, b: 0, a: 1}
@@ -57,6 +57,7 @@ MonoBehaviour:
   lineWidth: 0.05
   sortingOrder: -1
   lineTexture: {fileID: 0}
+  detectSound: {fileID: 8300000, guid: affa5ec3d5d65dd41bbf0a6b0061bb69, type: 3}
 --- !u!61 &-451477058447478091
 BoxCollider2D:
   m_ObjectHideFlags: 0
