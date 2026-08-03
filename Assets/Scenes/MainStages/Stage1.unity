@@ -4438,7 +4438,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Timer
   timerText: {fileID: 1527388059}
-  timeCount: 9454
+  timeCount: 13
 --- !u!1 &1014043025
 GameObject:
   m_ObjectHideFlags: 0

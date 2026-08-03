@@ -149,7 +149,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Timer
   timerText: {fileID: 748625703}
-  timeCount: 9454
+  timeCount: 160
 --- !u!4 &36339710
 Transform:
   m_ObjectHideFlags: 0
