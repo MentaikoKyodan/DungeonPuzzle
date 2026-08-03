@@ -813,6 +813,7 @@ GameObject:
   - component: {fileID: 358657302}
   - component: {fileID: 358657304}
   - component: {fileID: 358657303}
+  - component: {fileID: 358657305}
   m_Layer: 5
   m_Name: Rec
   m_TagString: Untagged
@@ -877,6 +878,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 358657301}
   m_CullTransparentMesh: 1
+--- !u!114 &358657305
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 358657301}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01e39b1fe7d1b154a8e1b9eb292d5f00, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RecOnOff
+  interval: 0.8
 --- !u!1 &403261276
 GameObject:
   m_ObjectHideFlags: 0
@@ -9809,6 +9823,7 @@ MonoBehaviour:
   lineWidth: 0.05
   sortingOrder: 10
   lineTexture: {fileID: 0}
+  detectSound: {fileID: 0}
 --- !u!212 &1228585610
 SpriteRenderer:
   serializedVersion: 2
@@ -10427,7 +10442,6 @@ GameObject:
   - component: {fileID: 1661002667}
   - component: {fileID: 1661002666}
   - component: {fileID: 1661002665}
-  - component: {fileID: 1661002669}
   m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
@@ -10522,18 +10536,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
---- !u!114 &1661002669
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1661002664}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d16c7e7fdcd58ca47a56101291d8b291, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CameraLoad
 --- !u!1 &1806168329
 GameObject:
   m_ObjectHideFlags: 0
