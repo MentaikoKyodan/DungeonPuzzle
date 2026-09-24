@@ -57,6 +57,13 @@ public class PlayerScript2 : MonoBehaviour
     [SerializeField] private Animator chargeEffect1Animator; // particleObj2(1段階目)についてるAnimator
     [SerializeField] private Animator chargeEffect2Animator; // particleObj(2段階目)についてるAnimator
     [SerializeField] private Vector2 chargeEffectOffset = Vector2.zero;
+
+    [Header("木箱耐久値設定")]
+    [Tooltip("耐久値に対応するタイル。index0=耐久1(ボロボロ)〜index4=耐久5(無傷)")]
+    [SerializeField] private TileBase[] crateTilesByDurability = new TileBase[5];
+    [SerializeField] private GameObject crateBreakEffectPrefab; // 破壊時エフェクト
+
+    private Dictionary<Vector3Int, int> crateDurability = new Dictionary<Vector3Int, int>();
     // --- 溜め機能用の変数 ---
     private float spacePressedTime = 0f;
     private int chargeLevel = 0; // 0: 通常(1個), 1: 1段階(2個), 2: 2段階(3個)
@@ -72,6 +79,37 @@ public class PlayerScript2 : MonoBehaviour
 
         particleObj.transform.localPosition = chargeEffectOffset;
         particleObj2.transform.localPosition = chargeEffectOffset;
+
+        InitializeCrateDurability();
+    }
+
+    private void InitializeCrateDurability()
+    {
+        crateDurability.Clear();
+        BoundsInt bounds = blockTilemap.cellBounds;
+        foreach (var cell in bounds.allPositionsWithin)
+        {
+            TileBase tile = blockTilemap.GetTile(cell);
+            if (tile == null) continue;
+
+            int durability = GetDurabilityFromTile(tile);
+
+            Debug.Log($"[初期スキャン] セル{cell} タイル名={tile.name} 判定耐久値={durability}");
+
+            if (durability > 0)
+                crateDurability[cell] = durability;
+        }
+        Debug.Log($"[初期スキャン完了] crateDurability登録数={crateDurability.Count} / InstanceID={GetInstanceID()}");
+    }
+
+    private int GetDurabilityFromTile(TileBase tile)
+    {
+        for (int i = 0; i < crateTilesByDurability.Length; i++)
+        {
+            if (crateTilesByDurability[i] == tile)
+                return i + 1; // index0→耐久1 ... index4→耐久5
+        }
+        return -1; // 対応タイルが無ければ耐久値管理の対象外（今まで通り壊れない木箱扱い）
     }
 
     void Update()
@@ -113,10 +151,11 @@ public class PlayerScript2 : MonoBehaviour
             // 【検知2】1マス先がブロックだった場合
             if (Physics2D.OverlapCircle(targetPosition, 0.4f, blockLayer))
             {
-                // 現在のパワーで押せる最大個数（レベル0=1個, レベル1=2個, レベル2=3個）
-                int maxPushable = chargeLevel + 1;   // 同時に押せる個数（重さ）はそのまま
-
+                int maxPushable = chargeLevel + 1;
                 List<Vector3Int> connectedBlocks = GetConnectedBlocks(targetCell, direction);
+                int chargeLevelAtPunch = chargeLevel; // ResetChargeで消える前に確保しとく
+
+                Debug.Log($"[座標チェック] targetCell={targetCell}, connectedBlocks内容={string.Join(",", connectedBlocks)}");
 
                 if (connectedBlocks.Count > maxPushable)
                 {
@@ -127,25 +166,24 @@ public class PlayerScript2 : MonoBehaviour
                     return;
                 }
 
-                // 距離はパワーを個数で割ったもの（最低1マス）
                 int pushDistance = Mathf.Max(1, (chargeLevel + 1) / connectedBlocks.Count);
-
-                //実際に押せる距離を調べる
                 int actualPushDistance = GetActualPushDistance(connectedBlocks, direction, pushDistance);
 
                 if (actualPushDistance <= 0)
                 {
                     Debug.Log("ブロックの先が塞がっているので押せません！");
+
                     ResetCharge();
                     if (animController != null)
                         animController.SetState(PlayerAnimationController.AnimState.Idle);
                     return;
                 }
 
-                // Undo用の記録（pushDistanceも保存するように変更）
                 List<TileBase> tilesBeforePush = new List<TileBase>();
                 foreach (var cell in connectedBlocks)
-                    tilesBeforePush.Add(blockTilemap.GetTile(cell));
+                    tilesBeforePush.Add(blockTilemap.GetTile(cell)); // ダメージ適用前＝殴る前の見た目を保存
+
+                List<int> durabilityBeforePush = ApplyCrateDamage(connectedBlocks, chargeLevelAtPunch);
 
                 historyStack.Push(new MoveRecord
                 {
@@ -153,7 +191,8 @@ public class PlayerScript2 : MonoBehaviour
                     blockCellsBefore = new List<Vector3Int>(connectedBlocks),
                     pushDirection = direction,
                     pushDistance = actualPushDistance,
-                    blockTiles = tilesBeforePush
+                    blockTiles = tilesBeforePush,
+                    durabilityBefore = durabilityBeforePush
                 });
 
                 StartCoroutine(PunchAndPushRoutine(connectedBlocks, direction, actualPushDistance));
@@ -239,7 +278,6 @@ public class PlayerScript2 : MonoBehaviour
     }
 
     //履歴が溜まりすぎないようにする
-
     //直前の行動を取り消す
     private IEnumerator UndoRoutine()
     {
@@ -247,7 +285,14 @@ public class PlayerScript2 : MonoBehaviour
 
         MoveRecord record = historyStack.Pop();
 
-        if (record.isBlockPush)
+        if (record.isDamageOnly)
+        {
+            RestoreCrateDurability(record.blockCellsBefore, record.durabilityBefore);
+
+            if (animController != null)
+                animController.SetState(PlayerAnimationController.AnimState.Idle);
+        }
+        else if (record.isBlockPush)
         {
             for (int i = 0; i < record.blockCellsBefore.Count; i++)
             {
@@ -256,9 +301,14 @@ public class PlayerScript2 : MonoBehaviour
 
                 blockTilemap.SetTile(movedCell, null);
                 blockTilemap.SetTile(originalCell, record.blockTiles[i]);
+
+                //移動先に残ってる耐久値データを削除
+                crateDurability.Remove(movedCell);
             }
+
+            RestoreCrateDurability(record.blockCellsBefore, record.durabilityBefore);
+
             yield return null;
-            //全ボタンの状態を強制的に再チェックする
             foreach (var button in FindObjectsByType<ButtonSwitchScript>(FindObjectsSortMode.None))
                 button.ForceRefresh();
 
@@ -277,6 +327,20 @@ public class PlayerScript2 : MonoBehaviour
 
         yield return null;
         isUndoing = false;
+    }
+
+    private void RestoreCrateDurability(List<Vector3Int> cells, List<int> durabilityBefore)
+    {
+        if (cells == null || durabilityBefore == null) return;
+
+        for (int i = 0; i < cells.Count; i++)
+        {
+            int before = durabilityBefore[i];
+            if (before <= 0) continue; // 対象外だった箱はスキップ
+
+            crateDurability[cells[i]] = before;
+            blockTilemap.SetTile(cells[i], crateTilesByDurability[before - 1]);
+        }
     }
     // --- 殴りアニメを再生してから、ブロックを実際に動かす ---
     private IEnumerator PunchAndPushRoutine(List<Vector3Int> blockList, Vector3Int direction, int pushDistance)
@@ -451,6 +515,7 @@ public class PlayerScript2 : MonoBehaviour
         {
             SpawnDustEffect(targetGrid.GetCellCenterWorld(cell));
         }
+
         List<GameObject> dummies = new List<GameObject>();
         List<Vector3> endPositions = new List<Vector3>();
         List<TileBase> originalTiles = new List<TileBase>();
@@ -468,27 +533,23 @@ public class PlayerScript2 : MonoBehaviour
             Vector3 endPos = targetGrid.GetCellCenterWorld(toCell);
             endPositions.Add(endPos);
 
-            // ダミー生成
             GameObject dummy = Instantiate(blockRenderPrefab, startPos, Quaternion.identity);
             SpriteRenderer sr = dummy.GetComponent<SpriteRenderer>();
             if (sr != null) sr.sprite = blockTilemap.GetSprite(fromCell);
 
-            // 動いてる間だけ当たり判定を持たせる
             BoxCollider2D col = dummy.GetComponent<BoxCollider2D>();
             if (col == null) col = dummy.AddComponent<BoxCollider2D>();
             col.isTrigger = false;
-            dummy.layer = GetLayerFromMask(blockLayer); // Block Layerに設定
+            dummy.layer = GetLayerFromMask(blockLayer);
 
             dummies.Add(dummy);
         }
 
-        // 一斉にタイルマップから消去
         foreach (var cell in blockList)
         {
             blockTilemap.SetTile(cell, null);
         }
 
-        // すべてのダミーブロックを同時にスーッと目標位置まで動かす
         bool allArrived = false;
         while (!allArrived)
         {
@@ -509,16 +570,75 @@ public class PlayerScript2 : MonoBehaviour
             yield return null;
         }
 
-        // 目的地に着いたら、すべてのダミーを消して、本物のタイルマップの新しい位置にデータを書き戻す
+        //移動前に全部の耐久値を退避してから、元のキーを全部消す
+        Dictionary<int, int> durabilityToMove = new Dictionary<int, int>();
+        for (int i = 0; i < blockList.Count; i++)
+        {
+            if (crateDurability.TryGetValue(blockList[i], out int dur))
+                durabilityToMove[i] = dur;
+        }
+        foreach (var cell in blockList)
+        {
+            crateDurability.Remove(cell);
+        }
+        //ここまで追加
+
         for (int i = 0; i < dummies.Count; i++)
         {
             Destroy(dummies[i]);
             blockTilemap.SetTile(nextCells[i], originalTiles[i]);
+
+            //退避しておいた辞書から書き込む
+            if (durabilityToMove.TryGetValue(i, out int dur))
+            {
+                crateDurability[nextCells[i]] = dur;
+            }
         }
 
         isBlockMoving = false;
     }
 
+    // connectedBlocksと同じ順番・同じ数で「殴る前の耐久値」を返す（対象外は-1）
+    private List<int> ApplyCrateDamage(List<Vector3Int> connectedBlocks, int chargeLevelAtPunch)
+    {
+        int maxPushable = chargeLevelAtPunch + 1;
+        int hitCount = Mathf.Min(connectedBlocks.Count, maxPushable);
+        int baseDamage = chargeLevelAtPunch + 1; // 通常=1, 1段階=2, 2段階=3
+
+        List<int> durabilityBefore = new List<int>();
+
+        for (int i = 0; i < connectedBlocks.Count; i++)
+        {
+            Vector3Int cell = connectedBlocks[i];
+
+            if (i >= hitCount || !crateDurability.ContainsKey(cell))
+            {
+                durabilityBefore.Add(-1);
+                continue;
+            }
+
+            int before = crateDurability[cell];
+            int damage = baseDamage; // ★変更：距離による減衰を廃止、全部同じダメージ
+            int after = before - damage;
+
+            durabilityBefore.Add(before);
+
+            if (after <= 0)
+            {
+                crateDurability.Remove(cell);
+                blockTilemap.SetTile(cell, null);
+                if (crateBreakEffectPrefab != null)
+                    Instantiate(crateBreakEffectPrefab, blockTilemap.GetCellCenterWorld(cell), Quaternion.identity);
+            }
+            else
+            {
+                crateDurability[cell] = after;
+                blockTilemap.SetTile(cell, crateTilesByDurability[after - 1]);
+            }
+        }
+
+        return durabilityBefore;
+    }
     // LayerMaskからレイヤー番号を取り出すヘルパー
     private int GetLayerFromMask(LayerMask mask)
     {
@@ -557,11 +677,13 @@ public class PlayerScript2 : MonoBehaviour
     private struct MoveRecord
     {
         public bool isBlockPush;
+        public bool isDamageOnly; // 押せなかったけど殴ってダメージだけ入ったケース
         public Vector3 playerPosBefore;
         public List<Vector3Int> blockCellsBefore;
         public Vector3Int pushDirection;
         public int pushDistance;
         public List<TileBase> blockTiles;
+        public List<int> durabilityBefore; // blockCellsBeforeと同じ順番、対象外は-1
     }
     // 何マス押せるか（壁や別のブロックにぶつかるまでの距離）を調べる
     private int GetActualPushDistance(List<Vector3Int> connectedBlocks, Vector3Int direction, int maxDistance)
