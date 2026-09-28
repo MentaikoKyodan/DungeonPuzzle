@@ -86,6 +86,9 @@ public class PlayerScript2 : MonoBehaviour
     private void InitializeCrateDurability()
     {
         crateDurability.Clear();
+
+        if (blockTilemap == null) return;
+
         BoundsInt bounds = blockTilemap.cellBounds;
         foreach (var cell in bounds.allPositionsWithin)
         {

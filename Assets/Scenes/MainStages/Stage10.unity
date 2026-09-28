@@ -3262,6 +3262,13 @@ MonoBehaviour:
   chargeEffect1Animator: {fileID: 214983825}
   chargeEffect2Animator: {fileID: 758141167}
   chargeEffectOffset: {x: 0, y: -0.75}
+  crateTilesByDurability:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  crateBreakEffectPrefab: {fileID: 0}
 --- !u!50 &1119862805
 Rigidbody2D:
   serializedVersion: 5

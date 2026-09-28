@@ -10040,6 +10040,13 @@ MonoBehaviour:
   chargeEffect1Animator: {fileID: 0}
   chargeEffect2Animator: {fileID: 0}
   chargeEffectOffset: {x: 0, y: 0}
+  crateTilesByDurability:
+  - {fileID: 11400000, guid: 53b6afcb26007fe42874105c1f87b75b, type: 2}
+  - {fileID: 11400000, guid: 1d9fa88fc5cb4474b906f449dc859690, type: 2}
+  - {fileID: 11400000, guid: 98c47ea8bbade7841a899cc69681fc59, type: 2}
+  - {fileID: 11400000, guid: 890cb0a6585a89a469ac5dba0c91fea1, type: 2}
+  - {fileID: 11400000, guid: 0ed337b1077609644a4d659b42146299, type: 2}
+  crateBreakEffectPrefab: {fileID: 0}
 --- !u!50 &1303092477
 Rigidbody2D:
   serializedVersion: 5
