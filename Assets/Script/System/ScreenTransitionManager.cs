@@ -63,6 +63,8 @@ public class ScreenTransitionManager : MonoBehaviour
     // 内部状態
     // =========================================================
     public bool IsTransitioning { get; private set; } = false;
+    public bool IsIrisIn { get; private set; } = false;               // アイリスインの最中だけtrue
+    public bool IsInputLocked => IsTransitioning && !IsIrisIn;        // 操作・検知を止めたい期間
 
     // =========================================================
     // 初期化
@@ -88,8 +90,16 @@ public class ScreenTransitionManager : MonoBehaviour
 
     public void TriggerGameOver(Vector3 playerWorldPos)
     {
-        Debug.Log("TriggerGameOver呼ばれたよ");
-        if (IsTransitioning) return;
+        // アイリスアウト中やシーン読み込み中は無視する
+        if (IsInputLocked) return;
+
+        // アイリスイン中なら、それを止めてゲームオーバー演出に割り込む
+        if (IsIrisIn)
+        {
+            StopAllCoroutines();
+            IsIrisIn = false;
+        }
+
         StartCoroutine(GameOverSequence(playerWorldPos));
     }
 
@@ -153,11 +163,18 @@ public class ScreenTransitionManager : MonoBehaviour
 
     private IEnumerator IrisOut(Vector3 worldPos)
     {
+        // アイリスインの途中から割り込んだ場合は、今の円の大きさから閉じ始める
+        bool wasOpening = irisMask.gameObject.activeSelf;
+        float startRadius = wasOpening
+            // カメラ四隅のうちworldPosから最も遠い点までの距離 = 画面全体を確実に覆える半径
+
+            ? irisMask.transform.localScale.x * 0.5f
+            : CalcScreenCoverRadius(worldPos);
+
         blackOverlay.gameObject.SetActive(true);
         irisMask.gameObject.SetActive(true);
 
         // カメラ四隅のうちworldPosから最も遠い点までの距離 = 画面全体を確実に覆える半径
-        float startRadius = CalcScreenCoverRadius(worldPos);
 
         float elapsed = 0f;
         while (elapsed < irisOutDuration)
@@ -176,6 +193,7 @@ public class ScreenTransitionManager : MonoBehaviour
 
     private IEnumerator IrisIn(Vector3 worldPos)
     {
+        IsIrisIn = true;
         irisMask.gameObject.SetActive(true);
         float targetRadius = CalcScreenCoverRadius(worldPos);
 
@@ -191,6 +209,7 @@ public class ScreenTransitionManager : MonoBehaviour
 
         blackOverlay.gameObject.SetActive(false);
         irisMask.gameObject.SetActive(false);
+        IsIrisIn = false;
     }
 
     private IEnumerator RedFlash()

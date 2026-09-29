@@ -123,24 +123,21 @@ public class EnemyScript : MonoBehaviour
         Vector2 direction = GetSensorDirection();
 
         RaycastHit2D hit = Physics2D.Raycast(origin, direction, sensorLength);
-        bool isDetectedNow = hit.collider != null && hit.collider.CompareTag(targetTag);
+        bool isDetectedNow = hit.collider != null && hit.collider.CompareTag(targetTag);   // ← この行を戻す
+        bool canDetect = ScreenTransitionManager.Instance == null
+                         || !ScreenTransitionManager.Instance.IsInputLocked;
 
-        if (hit.collider != null)
-            Debug.Log($"Raycastが何かに当たった: {hit.collider.name} / タグ: {hit.collider.tag}");
-        // 「検知していない→検知した」に切り替わった瞬間だけ反応する。
-        // 時間で制御しないので、プレイヤーが範囲に入るたびに何度でも反応する。
-        if (isDetectedNow && !wasDetected)
+        if (canDetect)
         {
-            Debug.Log("プレイヤー検知！TriggerDetectionを呼ぶよ");
-            PlayerScript2 player = hit.collider.GetComponent<PlayerScript2>();
-            if (player != null)
+            if (isDetectedNow && !wasDetected)
             {
-                TriggerDetection(player);
+                PlayerScript2 player = hit.collider.GetComponent<PlayerScript2>();
+                if (player != null)
+                    TriggerDetection(player);
             }
+
+            wasDetected = isDetectedNow;
         }
-
-        wasDetected = isDetectedNow;
-
         // Gameビューに表示するセンサー線の位置と色を更新
         // 何か(ブロックなど)に当たっていれば、その地点で線を止める
         if (showInGameView && lineRenderer != null)

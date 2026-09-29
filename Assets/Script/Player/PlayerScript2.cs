@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.InputSystem; // ★追加：コントローラー(Gamepad)対応のため
+using UnityEngine.InputSystem; // コントローラー(Gamepad)対応のため
 using UnityEngine.Tilemaps; // タイルマップを操作するために必要
 
 public class PlayerScript2 : MonoBehaviour
@@ -117,6 +117,10 @@ public class PlayerScript2 : MonoBehaviour
 
     void Update()
     {
+        // 画面遷移中(アイリス演出中を含む)は一切の入力を受け付けない
+        if (ScreenTransitionManager.Instance != null && ScreenTransitionManager.Instance.IsInputLocked)
+            return;
+
         HandleUndo();
         //何よりも最優先で溜め入力を監視する（移動中であっても溜められる！）
         HandleCharge();
@@ -621,7 +625,7 @@ public class PlayerScript2 : MonoBehaviour
             }
 
             int before = crateDurability[cell];
-            int damage = baseDamage; // ★変更：距離による減衰を廃止、全部同じダメージ
+            int damage = baseDamage; //距離による減衰を廃止、全部同じダメージ
             int after = before - damage;
 
             durabilityBefore.Add(before);
