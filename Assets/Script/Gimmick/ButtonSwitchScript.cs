@@ -1,23 +1,14 @@
 using UnityEngine;
 
-/// <summary>
-/// 床に配置するボタンギミック
-/// 上にブロックが乗ると押された判定になり、GoalScriptに通知して鍵を開ける
-/// 見た目は緑色(監視センサーの赤と混同されないようにするため)
-/// </summary>
 public class ButtonSwitchScript : MonoBehaviour
 {
     [Header("検知設定")]
-    [Tooltip("ブロックが乗っているか判定するレイヤー")]
     [SerializeField] private LayerMask blockLayer;
-    [Tooltip("判定の半径")]
     [SerializeField] private float detectRadius = 0.4f;
 
     [Header("見た目")]
     [SerializeField] private SpriteRenderer spriteRenderer;
-    [Tooltip("何も乗っていない時の色")]
     [SerializeField] private Color idleColor = Color.green;
-    [Tooltip("ブロックが乗っている時の色")]
     [SerializeField] private Color pressedColor = new Color(0.2f, 0.6f, 0.2f);
 
     [Header("SE設定")]
@@ -25,10 +16,10 @@ public class ButtonSwitchScript : MonoBehaviour
     [SerializeField] private AudioSource audioSource;
 
     [Tooltip("ブロックが離れたら鍵を再度かけるか。falseなら一度押したら解錠されっぱなし")]
-    [SerializeField] private bool relockOnRelease = false;
+    [SerializeField] private bool relockOnRelease = true;
 
-    private bool isPressed = false;
-    private bool hasNotifiedGoal = false;
+    private bool isPressed = false;        // 今ブロックが乗っているか(見た目用)
+    private bool hasNotifiedGoal = false;  // ゴールに「押された」と通知中か
 
     private void Awake()
     {
@@ -42,52 +33,39 @@ public class ButtonSwitchScript : MonoBehaviour
 
     private void Update()
     {
-        bool isPressedNow = Physics2D.OverlapCircle(transform.position, detectRadius, blockLayer);
-
-        if (isPressedNow && !isPressed)
-        {
-            isPressed = true;
-            spriteRenderer.color = pressedColor;
-
-            if (pressSE != null && audioSource != null)
-                audioSource.PlayOneShot(pressSE);
-
-            if (GoalScript2D.Instance != null)
-            {
-                GoalScript2D.Instance.NotifyButtonPressed();
-                hasNotifiedGoal = true; // 通知したらここも更新
-            }
-        }
-        else if (!isPressedNow && isPressed)
-        {
-            isPressed = false;
-            spriteRenderer.color = idleColor;
-
-            if (relockOnRelease && GoalScript2D.Instance != null)
-            {
-                GoalScript2D.Instance.NotifyButtonReleased();
-                hasNotifiedGoal = false; // ★通知したらここも更新
-            }
-        }
+        Refresh(true);
     }
 
+    // Undoなどから呼ぶ用(SEは鳴らさない)
     public void ForceRefresh()
     {
-        bool isPressedNow = Physics2D.OverlapCircle(transform.position, detectRadius, blockLayer);
+        Refresh(false);
+    }
 
-        // 見た目は常に現状に合わせる
-        isPressed = isPressedNow;
-        spriteRenderer.color = isPressed ? pressedColor : idleColor;
+    private void Refresh(bool playSE)
+    {
+        bool pressedNow = Physics2D.OverlapCircle(transform.position, detectRadius, blockLayer);
 
-        // ★比較対象はisPressedじゃなくhasNotifiedGoal
-        if (isPressedNow == hasNotifiedGoal) return;
+        // 見た目・SE
+        if (pressedNow != isPressed)
+        {
+            if (pressedNow && playSE && pressSE != null && audioSource != null)
+                audioSource.PlayOneShot(pressSE);
+
+            isPressed = pressedNow;
+            spriteRenderer.color = isPressed ? pressedColor : idleColor;
+        }
+
+        // ゴールへの通知(通知中かどうかだけを基準にする)
+        bool shouldNotify = relockOnRelease ? pressedNow : (pressedNow || hasNotifiedGoal);
+        if (shouldNotify == hasNotifiedGoal) return;
         if (GoalScript2D.Instance == null) return;
 
-        if (isPressedNow)
+        if (shouldNotify)
             GoalScript2D.Instance.NotifyButtonPressed();
         else
             GoalScript2D.Instance.NotifyButtonReleased();
 
-        hasNotifiedGoal = isPressedNow; // 通知した状態を記録
+        hasNotifiedGoal = shouldNotify;
     }
 }

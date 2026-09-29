@@ -12,6 +12,9 @@ public class GoalScript2D : MonoBehaviour
     [Tooltip("ゴールと判定するオブジェクトのタグ")]
     [SerializeField] private string targetTag = "Player";
 
+    [Tooltip("OFFにするとクリア記録を残さない(チュートリアルの途中ステージ用)")]
+    [SerializeField] private bool recordClear = true;
+
     [Header("鍵設定")]
     [Tooltip("ボタンギミックがあるステージではON。最初は鍵がかかった状態になる")]
     [SerializeField] private bool startLocked = false;
@@ -122,7 +125,7 @@ public class GoalScript2D : MonoBehaviour
         Debug.Log("Goal!");
 
         // クリア済みとして記録
-        if (GameData.Instance != null)
+        if (recordClear && GameData.Instance != null)
             GameData.Instance.SetCleared(stageIndex);
 
         if (goalSound != null && SEManager.Instance != null)
