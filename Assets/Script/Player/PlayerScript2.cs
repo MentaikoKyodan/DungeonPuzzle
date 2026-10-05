@@ -136,10 +136,23 @@ public class PlayerScript2 : MonoBehaviour
             if (animController != null)
             {
                 if (direction == Vector3Int.right)
+                {
                     animController.SetFacing(true);
+                    animController.SetFacingBack(false);
+                }
                 else if (direction == Vector3Int.left)
+                {
                     animController.SetFacing(false);
-                // 上下の場合は向きそのまま
+                    animController.SetFacingBack(false);
+                }
+                else if (direction == Vector3Int.up)
+                {
+                    animController.SetFacingBack(true);
+                }
+                else // down
+                {
+                    animController.SetFacingBack(false);
+                }
             }
 
             Vector3Int currentCell = targetGrid.WorldToCell(transform.position);

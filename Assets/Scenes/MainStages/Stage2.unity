@@ -1147,7 +1147,7 @@ TilemapRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_ChunkSize: {x: 32, y: 32, z: 32}
-  m_ChunkCullingBounds: {x: 0.63, y: 0.75, z: 0}
+  m_ChunkCullingBounds: {x: 0.16000003, y: 0.22000003, z: 0}
   m_MaxChunkCount: 16
   m_MaxFrameAge: 16
   m_SortOrder: 0
@@ -1165,91 +1165,91 @@ Tilemap:
   - first: {x: -3, y: -2, z: 0}
     second:
       serializedVersion: 2
-      m_TileIndex: 1
-      m_TileSpriteIndex: 1
-      m_TileMatrixIndex: 0
+      m_TileIndex: 0
+      m_TileSpriteIndex: 0
+      m_TileMatrixIndex: 1
       m_TileColorIndex: 0
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
-      m_AllTileFlags: 1342177279
+      m_AllTileFlags: 1073741825
   - first: {x: -2, y: -2, z: 0}
     second:
       serializedVersion: 2
-      m_TileIndex: 1
-      m_TileSpriteIndex: 1
+      m_TileIndex: 0
+      m_TileSpriteIndex: 0
       m_TileMatrixIndex: 0
       m_TileColorIndex: 0
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
-      m_AllTileFlags: 1342177279
+      m_AllTileFlags: 1073741825
   - first: {x: -3, y: 1, z: 0}
     second:
       serializedVersion: 2
-      m_TileIndex: 1
-      m_TileSpriteIndex: 1
-      m_TileMatrixIndex: 0
+      m_TileIndex: 0
+      m_TileSpriteIndex: 0
+      m_TileMatrixIndex: 1
       m_TileColorIndex: 0
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
-      m_AllTileFlags: 1342177279
+      m_AllTileFlags: 1073741825
   - first: {x: -2, y: 1, z: 0}
     second:
       serializedVersion: 2
-      m_TileIndex: 1
-      m_TileSpriteIndex: 1
-      m_TileMatrixIndex: 0
+      m_TileIndex: 0
+      m_TileSpriteIndex: 0
+      m_TileMatrixIndex: 1
       m_TileColorIndex: 0
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
-      m_AllTileFlags: 1342177279
+      m_AllTileFlags: 1073741825
   m_AnimatedTiles: {}
   m_TileAssetArray:
+  - m_RefCount: 4
+    m_Data: {fileID: 11400000, guid: 0664425eb26ac1b48ad7a75b380d2c4c, type: 2}
   - m_RefCount: 0
     m_Data: {fileID: 0}
-  - m_RefCount: 4
-    m_Data: {fileID: 11400000, guid: 0ed337b1077609644a4d659b42146299, type: 2}
   m_TileSpriteArray:
+  - m_RefCount: 4
+    m_Data: {fileID: 9185320520642332187, guid: 5cc07e27151be0445bc91baa9164fa45, type: 3}
   - m_RefCount: 0
     m_Data: {fileID: 0}
-  - m_RefCount: 4
-    m_Data: {fileID: 7367783623287229012, guid: 03dd204add5ec2a489ca77576637dd43, type: 3}
   m_TileMatrixArray:
-  - m_RefCount: 4
+  - m_RefCount: 1
     m_Data:
-      e00: 0.5
+      e00: 1
       e01: 0
       e02: 0
       e03: 0
       e10: 0
-      e11: 0.5
+      e11: 1
       e12: 0
       e13: 0
       e20: 0
       e21: 0
-      e22: 0.5
+      e22: 1
       e23: 0
       e30: 0
       e31: 0
       e32: 0
       e33: 1
-  - m_RefCount: 0
+  - m_RefCount: 3
     m_Data:
-      e00: 1e-45
+      e00: 1
       e01: 0
-      e02: -1.420552e+13
-      e03: -6.310897e-29
-      e10: 1e-45
-      e11: 0
-      e12: 1.88e-43
-      e13: 8.65e-43
-      e20: -5.1858893e-22
+      e02: 0
+      e03: 0
+      e10: 0
+      e11: 1
+      e12: 0
+      e13: 0
+      e20: 0
       e21: 0
-      e22: -2.0405998
-      e23: 0.0000000047318345
-      e30: 4.5911e-41
+      e22: 1
+      e23: 0
+      e30: 0
       e31: 0
-      e32: 8.69e-43
-      e33: 8.66e-43
+      e32: 0
+      e33: 1
   m_TileColorArray:
   - m_RefCount: 4
     m_Data: {r: 1, g: 1, b: 1, a: 1}
@@ -1410,6 +1410,37 @@ MonoBehaviour:
   punchAnim:
     frames:
     - {fileID: -4509506210544505328, guid: 75a994f54b8b84b42bc458995f4e6693, type: 3}
+    frameInterval: 0.12
+    loop: 0
+    impactFrame: 0
+  idleBackAnim:
+    frames:
+    - {fileID: -3708872061015022990, guid: 67c2336a5c86c0f41bbb60965dbd28d8, type: 3}
+    - {fileID: -7302695991508490184, guid: eedc23e9e15f8c341a7ac8ae8cdee840, type: 3}
+    frameInterval: 0.4
+    loop: 1
+    impactFrame: -1
+  pushBackAnim:
+    frames:
+    - {fileID: 4706075608924683771, guid: 70f56fa9e676d5e49a8fa922b9be34df, type: 3}
+    frameInterval: 0.12
+    loop: 0
+    impactFrame: 0
+  charge1BackAnim:
+    frames:
+    - {fileID: 1530603142701771137, guid: 02b8b25f28ac711419270f1450973aba, type: 3}
+    frameInterval: 0.2
+    loop: 1
+    impactFrame: -1
+  charge2BackAnim:
+    frames:
+    - {fileID: -677866807403666824, guid: a52110b574f327c43b107ee24148fac4, type: 3}
+    frameInterval: 0.2
+    loop: 1
+    impactFrame: -1
+  punchBackAnim:
+    frames:
+    - {fileID: 4706075608924683771, guid: 70f56fa9e676d5e49a8fa922b9be34df, type: 3}
     frameInterval: 0.12
     loop: 0
     impactFrame: 0

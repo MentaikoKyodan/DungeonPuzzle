@@ -35,6 +35,33 @@ public class PlayerAnimationController : MonoBehaviour
     [SerializeField] private AnimClip2D charge2Anim;
     [SerializeField] private AnimClip2D punchAnim;
 
+
+
+    [Header("背中向き(上移動用) 未設定なら通常アニメで代用")]
+    [SerializeField] private AnimClip2D idleBackAnim;
+    [SerializeField] private AnimClip2D pushBackAnim;
+    [SerializeField] private AnimClip2D charge1BackAnim;
+    [SerializeField] private AnimClip2D charge2BackAnim;
+    [SerializeField] private AnimClip2D punchBackAnim;
+
+    private bool facingBack;
+
+    public void SetFacingBack(bool back)
+    {
+        if (facingBack == back) return;
+        facingBack = back;
+        RefreshClip();
+    }
+
+    // 状態はそのままで、クリップだけ差し替える
+    private void RefreshClip()
+    {
+        currentClip = GetClip(CurrentState);
+        if (currentClip == null || currentClip.frames.Length == 0) return;
+
+        frameIndex = Mathf.Min(frameIndex, currentClip.frames.Length - 1);
+        spriteRenderer.sprite = currentClip.frames[frameIndex];
+    }
     public AnimState CurrentState { get; private set; } = AnimState.Idle;
 
     // ループしないアニメ（殴りなど）が終わった時に呼ばれる
@@ -105,14 +132,18 @@ public class PlayerAnimationController : MonoBehaviour
 
     private AnimClip2D GetClip(AnimState state)
     {
+        AnimClip2D front, back;
         switch (state)
         {
-            case AnimState.Idle: return idleAnim;
-            case AnimState.Push: return pushAnim;
-            case AnimState.Charge1: return charge1Anim;
-            case AnimState.Charge2: return charge2Anim;
-            case AnimState.Punch: return punchAnim;
-            default: return idleAnim;
+            case AnimState.Push: front = pushAnim; back = pushBackAnim; break;
+            case AnimState.Charge1: front = charge1Anim; back = charge1BackAnim; break;
+            case AnimState.Charge2: front = charge2Anim; back = charge2BackAnim; break;
+            case AnimState.Punch: front = punchAnim; back = punchBackAnim; break;
+            default: front = idleAnim; back = idleBackAnim; break;
         }
+
+        if (facingBack && back != null && back.frames != null && back.frames.Length > 0)
+            return back;
+        return front;
     }
 }
