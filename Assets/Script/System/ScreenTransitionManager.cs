@@ -1,7 +1,8 @@
 using System.Collections;
+using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 /// <summary>
 /// 画面遷移演出を一元管理するシングルトン
@@ -56,6 +57,30 @@ public class ScreenTransitionManager : MonoBehaviour
 
     [Header("--- 暗転設定 ---")]
     [SerializeField] private Image fadeImage;
+    [Header("--- 暗転インターバル設定 ---")]
+    [Tooltip("シーン遷移時、真っ黒のまま止まる最低秒数")]
+    [SerializeField] private float sceneHoldSeconds = 0.5f;
+
+    [Tooltip("ゲームオーバー(リトライ)時の最低秒数。テンポ重視なら短め")]
+    [SerializeField] private float gameOverHoldSeconds = 0.3f;
+
+    [Tooltip("タイトル文字やロード演出をまとめた親。空なら演出なしで待つだけ")]
+    [SerializeField] private CanvasGroup intervalContent;
+
+    [Tooltip("演出が出るときのフェード時間(秒)")]
+    [SerializeField] private float intervalFadeSeconds = 0.15f;
+
+    [Tooltip("タイトル文字(1文字ずつ表示)")]
+    [SerializeField] private TMP_Text intervalTitleText;
+
+    [Tooltip("1文字ごとの表示間隔(秒)")]
+    [SerializeField] private float titleCharInterval = 0.08f;
+
+    [Tooltip("ロード風の回転アイコン")]
+    [SerializeField] private RectTransform intervalSpinner;
+
+    [Tooltip("回転速度(度/秒)。マイナスで時計回り")]
+    [SerializeField] private float spinnerSpeed = -360f;
 
     [Tooltip("暗転にかかる時間(秒)")]
     [SerializeField] private float fadeDuration = 1.0f;
@@ -78,6 +103,8 @@ public class ScreenTransitionManager : MonoBehaviour
         }
         Instance = this;
         DontDestroyOnLoad(gameObject);
+        redFlashImage.gameObject.SetActive(false);
+        if (intervalContent != null) intervalContent.gameObject.SetActive(false);
 
         blackOverlay.gameObject.SetActive(false);
         irisMask.gameObject.SetActive(false);
@@ -125,7 +152,11 @@ public class ScreenTransitionManager : MonoBehaviour
         yield return StartCoroutine(IrisOut(playerWorldPos));
 
         string currentScene = SceneManager.GetActiveScene().name;
-        yield return SceneManager.LoadSceneAsync(currentScene);
+        var op = SceneManager.LoadSceneAsync(currentScene);
+        op.allowSceneActivation = false;
+        yield return StartCoroutine(BlackInterval(gameOverHoldSeconds, false, () => op.progress >= 0.9f));
+        op.allowSceneActivation = true;
+        yield return op;
         yield return null; // 1フレーム待ってオブジェクトを確定させる
 
         Vector3 spawnPos = GetPlayerWorldPos();
@@ -142,7 +173,11 @@ public class ScreenTransitionManager : MonoBehaviour
 
         yield return StartCoroutine(IrisOut(centerWorldPos));
 
-        yield return SceneManager.LoadSceneAsync(sceneName);
+        var op = SceneManager.LoadSceneAsync(sceneName);
+        op.allowSceneActivation = false;
+        yield return StartCoroutine(BlackInterval(sceneHoldSeconds, true, () => op.progress >= 0.9f));
+        op.allowSceneActivation = true;
+        yield return op;
         yield return null;
 
         // ステージセレクトならアイコン位置、ゲームシーンならカメラ中心を使う
@@ -244,7 +279,89 @@ public class ScreenTransitionManager : MonoBehaviour
         redFlashImage.color = c;
         redFlashImage.gameObject.SetActive(false);
     }
+    /// <summary>
+    /// アイリスアウト後の真っ黒な間。holdSeconds経過 かつ 文字表示完了 かつ extraWait完了 まで待つ
+    /// showContent=falseなら黒のまま待つだけ
+    /// </summary>
+    private IEnumerator BlackInterval(float holdSeconds, bool showContent, System.Func<bool> extraWait = null)
+    {
+        bool useContent = showContent && intervalContent != null;
+        int total = 0;
 
+        if (useContent)
+        {
+            intervalContent.alpha = 0f;
+            intervalContent.gameObject.SetActive(true);
+
+            if (intervalTitleText != null)
+            {
+                intervalTitleText.ForceMeshUpdate();
+                total = intervalTitleText.textInfo.characterCount;
+                intervalTitleText.maxVisibleCharacters = 0;
+            }
+
+            yield return StartCoroutine(FadeIntervalContent(0f, 1f));
+        }
+
+        float elapsed = 0f;
+        float charTimer = 0f;
+        int shown = 0;
+
+        while (true)
+        {
+            float dt = Time.unscaledDeltaTime;
+            elapsed += dt;
+
+            if (useContent)
+            {
+                if (intervalSpinner != null)
+                    intervalSpinner.Rotate(0f, 0f, spinnerSpeed * dt);
+
+                if (shown < total)
+                {
+                    charTimer += dt;
+                    while (charTimer >= titleCharInterval && shown < total)
+                    {
+                        charTimer -= titleCharInterval;
+                        shown++;
+                        intervalTitleText.maxVisibleCharacters = shown;
+                    }
+                }
+            }
+
+            bool timeDone = elapsed >= holdSeconds;
+            bool textDone = shown >= total;
+            bool extraDone = extraWait == null || extraWait();
+            if (timeDone && textDone && extraDone) break;
+
+            yield return null;
+        }
+
+        if (useContent)
+        {
+            // アイリスインの穴から文字が見えないように、先に消す
+            yield return StartCoroutine(FadeIntervalContent(1f, 0f));
+            intervalContent.gameObject.SetActive(false);
+        }
+    }
+
+    private IEnumerator FadeIntervalContent(float from, float to)
+    {
+        float t = 0f;
+        while (t < intervalFadeSeconds)
+        {
+            t += Time.unscaledDeltaTime;
+            intervalContent.alpha = Mathf.Lerp(from, to, t / intervalFadeSeconds);
+            yield return null;
+        }
+        intervalContent.alpha = to;
+    }
+
+    // 任意: ステージ名などを表示したいときに外から呼ぶ
+    public void SetIntervalTitle(string text)
+    {
+        if (intervalTitleText != null) intervalTitleText.text = text;
+    }
     // =========================================================
     // ユーティリティ
     // =========================================================

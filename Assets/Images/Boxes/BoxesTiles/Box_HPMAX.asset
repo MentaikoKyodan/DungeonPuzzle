@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 13312, guid: 0000000000000000e000000000000000, type: 0}
-  m_Name: NewBox
+  m_Name: Box_HPMAX
   m_EditorClassIdentifier: UnityEngine.dll::UnityEngine.Tilemaps.Tile
-  m_Sprite: {fileID: 9185320520642332187, guid: 5cc07e27151be0445bc91baa9164fa45, type: 3}
+  m_Sprite: {fileID: -2142867986013654731, guid: b4aa11f5d45470643a14e0eff2e91d34, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Transform:
     e00: 1
