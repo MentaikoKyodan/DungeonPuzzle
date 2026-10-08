@@ -122,15 +122,27 @@ public class EnemyScript : MonoBehaviour
         Vector2 origin = transform.position;
         Vector2 direction = GetSensorDirection();
 
+        Physics2D.SyncTransforms();
         RaycastHit2D hit = Physics2D.Raycast(origin, direction, sensorLength);
-        bool isDetectedNow = hit.collider != null && hit.collider.CompareTag(targetTag);   // ← この行を戻す
-        bool canDetect = ScreenTransitionManager.Instance == null
-                         || !ScreenTransitionManager.Instance.IsInputLocked;
+        bool isDetectedNow = hit.collider != null && hit.collider.CompareTag(targetTag);
+        bool canDetect = (ScreenTransitionManager.Instance == null
+                          || !ScreenTransitionManager.Instance.IsInputLocked)
+                         && !PlayerScript2.IsPushingBlocks;
 
         if (canDetect)
         {
             if (isDetectedNow && !wasDetected)
             {
+                string hits = "";
+                foreach (var h in Physics2D.RaycastAll(origin, direction, sensorLength))
+                    hits += $"[{h.collider.name} layer={LayerMask.LayerToName(h.collider.gameObject.layer)} trigger={h.collider.isTrigger} dist={h.distance:F2}] ";
+
+                string inside = "";
+                foreach (var c in Physics2D.OverlapPointAll(origin))
+                    inside += $"[{c.name} trigger={c.isTrigger} center={c.bounds.center} size={c.bounds.size}] ";
+
+                Debug.Log($"[検知] frame={Time.frameCount} camera={transform.position} dir={direction}\n全ヒット: {hits}\n原点を含むコライダー: {inside}");
+
                 PlayerScript2 player = hit.collider.GetComponent<PlayerScript2>();
                 if (player != null)
                     TriggerDetection(player);

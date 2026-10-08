@@ -19,6 +19,8 @@ public class PlayerScript2 : MonoBehaviour
     [SerializeField] private bool canCharge = true; //このステージで溜め攻撃を許可するか
     public bool isParticleActive = false; // パーティクルのオンオフを制御するフラグ
 
+    public static bool IsPushingBlocks = false;
+
     public Vector3 startPosition;
 
     [Header("コントローラー設定")]
@@ -527,6 +529,8 @@ public class PlayerScript2 : MonoBehaviour
     private IEnumerator MoveMultipleBlocksRoutine(List<Vector3Int> blockList, Vector3Int direction, int pushDistance)
     {
         isBlockMoving = true;
+        IsPushingBlocks = true;
+        Debug.Log($"[押し始め] frame={Time.frameCount} dir={direction} blocks={string.Join(",", blockList)}");
 
         if (animController != null)
             animController.SetState(PlayerAnimationController.AnimState.Push);
@@ -601,21 +605,24 @@ public class PlayerScript2 : MonoBehaviour
         {
             crateDurability.Remove(cell);
         }
-        //ここまで追加
 
         for (int i = 0; i < dummies.Count; i++)
         {
-            Destroy(dummies[i]);
             blockTilemap.SetTile(nextCells[i], originalTiles[i]);
-
-            //退避しておいた辞書から書き込む
             if (durabilityToMove.TryGetValue(i, out int dur))
-            {
                 crateDurability[nextCells[i]] = dur;
-            }
         }
 
+        // Tilemap Colliderが更新されるまで待つ(この間ダミーはまだ生きてる)
+        yield return new WaitForFixedUpdate();
+        yield return null;
+
+        for (int i = 0; i < dummies.Count; i++)
+            Destroy(dummies[i]);
+
+        Debug.Log($"[着地] frame={Time.frameCount}");
         isBlockMoving = false;
+        IsPushingBlocks = false;
     }
 
     // connectedBlocksと同じ順番・同じ数で「殴る前の耐久値」を返す（対象外は-1）
@@ -721,19 +728,26 @@ public class PlayerScript2 : MonoBehaviour
             if (!isObstacle)
             {
                 Collider2D hit = Physics2D.OverlapCircle(checkPos, 0.4f, blockLayer);
-                if (hit != null)
+                if (hit != null && !connectedBlocks.Contains(checkCell))
+                    isOtherBlock = true;
+            }
+
+            // カメラのいるマスには押し込めない(座標で判定)
+            bool isCameraCell = false;
+            foreach (var enemy in FindObjectsByType<EnemyScript>(FindObjectsSortMode.None))
+            {
+                if (targetGrid.WorldToCell(enemy.transform.position) == checkCell)
                 {
-                    // 押されている本人たちではなく、本当に別のブロックかどうか確認
-                    if (!connectedBlocks.Contains(checkCell))
-                        isOtherBlock = true;
+                    isCameraCell = true;
+                    break;
                 }
             }
 
-            if (isObstacle || isOtherBlock)
-                return step - 1; // ここまでしか進めない
+            if (isObstacle || isOtherBlock || isCameraCell)
+                return step - 1;
         }
 
-        return maxDistance; // 最後まで何もなかった
+        return maxDistance;
     }
     //ブロックが元々あった場所にヒットエフェクトを出す
     private IEnumerator SpawnHitEffectsDelayed(List<Vector3Int> blockList)
