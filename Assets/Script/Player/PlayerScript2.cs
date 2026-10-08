@@ -531,6 +531,8 @@ public class PlayerScript2 : MonoBehaviour
         isBlockMoving = true;
         IsPushingBlocks = true;
         Debug.Log($"[押し始め] frame={Time.frameCount} dir={direction} blocks={string.Join(",", blockList)}");
+        foreach (var e in FindObjectsByType<EnemyScript>(FindObjectsSortMode.None))
+            Debug.Log($"[カメラのマス] cell={targetGrid.WorldToCell(e.transform.position)} pos={e.transform.position} / 押し距離={pushDistance}");
 
         if (animController != null)
             animController.SetState(PlayerAnimationController.AnimState.Push);
