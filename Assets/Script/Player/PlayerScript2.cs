@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem; // コントローラー(Gamepad)対応のため
 using UnityEngine.Tilemaps; // タイルマップを操作するために必要
+using UnityEngine.Serialization;
 
 public class PlayerScript2 : MonoBehaviour
 {
@@ -51,9 +52,18 @@ public class PlayerScript2 : MonoBehaviour
     [SerializeField] private float hitEffectDelay = 0f;
     [SerializeField] private Vector2 hitEffectOffset = Vector2.zero;
 
-    [SerializeField] private GameObject dustEffectPrefab; //土煙のプレハブ
-    [SerializeField] private float dustEffectSpeed = 1f;  //土煙の再生速度
-    [SerializeField] private Vector2 dustEffectOffset = Vector2.zero;
+    [Header("土煙エフェクト（プレイヤー）")]
+    [FormerlySerializedAs("dustEffectPrefab")]
+    [SerializeField] private GameObject playerDustEffectPrefab;
+    [FormerlySerializedAs("dustEffectSpeed")]
+    [SerializeField] private float playerDustEffectSpeed = 1f;
+    [FormerlySerializedAs("dustEffectOffset")]
+    [SerializeField] private Vector2 playerDustEffectOffset = Vector2.zero;
+
+    [Header("土煙エフェクト（ブロック）")]
+    [SerializeField] private GameObject blockDustEffectPrefab;
+    [SerializeField] private float blockDustEffectSpeed = 1f;
+    [SerializeField] private Vector2 blockDustEffectOffset = Vector2.zero;
 
     [Header("溜めエフェクト設定")]
     [SerializeField] private Animator chargeEffect1Animator; // particleObj2(1段階目)についてるAnimator
@@ -478,7 +488,7 @@ public class PlayerScript2 : MonoBehaviour
     {
         isPlayerMoving = true;
 
-        SpawnDustEffect(transform.position); //移動前の位置に土煙
+        SpawnPlayerDust(transform.position); //移動前の位置に土煙
 
         while (Vector3.Distance(transform.position, targetPos) > 0.01f)
         {
@@ -539,7 +549,7 @@ public class PlayerScript2 : MonoBehaviour
 
         foreach (var cell in blockList)
         {
-            SpawnDustEffect(targetGrid.GetCellCenterWorld(cell));
+            SpawnBlockDust(targetGrid.GetCellCenterWorld(cell));
         }
 
         List<GameObject> dummies = new List<GameObject>();
@@ -777,13 +787,26 @@ public class PlayerScript2 : MonoBehaviour
         }
     }
     //指定した位置に土煙エフェクトを出す
-    private void SpawnDustEffect(Vector3 pos)
+    //プレイヤー用の土煙
+    private void SpawnPlayerDust(Vector3 pos)
     {
-        if (dustEffectPrefab == null) return;
+        SpawnDustEffect(pos, playerDustEffectPrefab, playerDustEffectSpeed, playerDustEffectOffset);
+    }
 
-        GameObject dust = Instantiate(dustEffectPrefab, pos + (Vector3)dustEffectOffset, Quaternion.identity);
+    //ブロック用の土煙
+    private void SpawnBlockDust(Vector3 pos)
+    {
+        SpawnDustEffect(pos, blockDustEffectPrefab, blockDustEffectSpeed, blockDustEffectOffset);
+    }
+
+    //指定した位置に土煙エフェクトを出す（共通処理）
+    private void SpawnDustEffect(Vector3 pos, GameObject prefab, float speed, Vector2 offset)
+    {
+        if (prefab == null) return;
+
+        GameObject dust = Instantiate(prefab, pos + (Vector3)offset, Quaternion.identity);
         Animator anim = dust.GetComponent<Animator>();
         if (anim != null)
-            anim.speed = dustEffectSpeed;
+            anim.speed = speed;
     }
 }

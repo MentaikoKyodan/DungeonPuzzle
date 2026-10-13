@@ -15,6 +15,7 @@ using UnityEngine.UI;
 /// ゲームオーバー時: ScreenTransitionManager.Instance.TriggerGameOver(playerWorldPos);
 /// シーン遷移時:     ScreenTransitionManager.Instance.TransitionToScene("SceneName", centerWorldPos);
 /// </summary>
+
 public class ScreenTransitionManager : MonoBehaviour
 {
     public static ScreenTransitionManager Instance { get; private set; }

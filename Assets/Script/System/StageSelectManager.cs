@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using TMPro;
 /// <summary>
 /// ステージセレクト画面の管理スクリプト
 /// </summary>
@@ -11,6 +12,9 @@ public class StageSelectManager : MonoBehaviour
     {
         [Tooltip("ロードするシーン名(Build Settingsに登録必須)")]
         public string sceneName;
+
+        [Tooltip("画面に表示するステージ名")]
+        public string displayName;
 
         [Tooltip("このノードのTransform(位置情報として使う)")]
         public Transform nodeTransform;
@@ -26,6 +30,9 @@ public class StageSelectManager : MonoBehaviour
     [SerializeField] private Transform stageIcon;
     [SerializeField] private float moveSpeed = 5f;
     [SerializeField] private Vector2 iconOffset = new Vector2(0f, 0.5f);
+
+    [Header("--- ステージ名表示 ---")]
+    [SerializeField] private TMP_Text stageNameText;
 
     [Header("--- パスライン設定 ---")]
     [SerializeField] private LineRenderer pathLine;
@@ -63,6 +70,7 @@ public class StageSelectManager : MonoBehaviour
         }
 
         stageIcon.position = (Vector2)stages[currentIndex].nodeTransform.position + iconOffset;
+        UpdateStageName();
         DrawPath();
     }
 
@@ -128,6 +136,7 @@ public class StageSelectManager : MonoBehaviour
         if (next < 0 || next >= stages.Length) return;
 
         currentIndex = next;
+        UpdateStageName();
         Vector3 target = (Vector2)stages[currentIndex].nodeTransform.position + iconOffset;
         StartCoroutine(MoveToNode(target));
     }
@@ -212,5 +221,15 @@ public class StageSelectManager : MonoBehaviour
         {
             pathLine.SetPosition(i, stages[i].nodeTransform.position);
         }
+    }
+    private void UpdateStageName()
+    {
+        if (stageNameText == null) return;
+
+        var node = stages[currentIndex];
+        // displayNameが空ならsceneNameで代用するようにする
+        stageNameText.text = string.IsNullOrEmpty(node.displayName)
+            ? node.sceneName
+            : node.displayName;
     }
 }
