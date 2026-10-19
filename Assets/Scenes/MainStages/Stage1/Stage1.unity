@@ -2338,8 +2338,8 @@ Tilemap:
   - first: {x: -5, y: 1, z: 0}
     second:
       serializedVersion: 2
-      m_TileIndex: 2
-      m_TileSpriteIndex: 3
+      m_TileIndex: 6
+      m_TileSpriteIndex: 6
       m_TileMatrixIndex: 0
       m_TileColorIndex: 1
       m_TileObjectToInstantiateIndex: 65535
@@ -2436,16 +2436,6 @@ Tilemap:
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
   - first: {x: -3, y: 2, z: 0}
-    second:
-      serializedVersion: 2
-      m_TileIndex: 4
-      m_TileSpriteIndex: 4
-      m_TileMatrixIndex: 0
-      m_TileColorIndex: 1
-      m_TileObjectToInstantiateIndex: 65535
-      dummyAlignment: 0
-      m_AllTileFlags: 1073741825
-  - first: {x: -2, y: 2, z: 0}
     second:
       serializedVersion: 2
       m_TileIndex: 4
@@ -2575,11 +2565,21 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
-  - first: {x: -1, y: 3, z: 0}
+  - first: {x: -2, y: 3, z: 0}
     second:
       serializedVersion: 2
       m_TileIndex: 2
       m_TileSpriteIndex: 3
+      m_TileMatrixIndex: 0
+      m_TileColorIndex: 1
+      m_TileObjectToInstantiateIndex: 65535
+      dummyAlignment: 0
+      m_AllTileFlags: 1073741825
+  - first: {x: -1, y: 3, z: 0}
+    second:
+      serializedVersion: 2
+      m_TileIndex: 7
+      m_TileSpriteIndex: 1
       m_TileMatrixIndex: 0
       m_TileColorIndex: 1
       m_TileObjectToInstantiateIndex: 65535
@@ -2598,8 +2598,8 @@ Tilemap:
   - first: {x: 1, y: 3, z: 0}
     second:
       serializedVersion: 2
-      m_TileIndex: 2
-      m_TileSpriteIndex: 3
+      m_TileIndex: 1
+      m_TileSpriteIndex: 7
       m_TileMatrixIndex: 0
       m_TileColorIndex: 1
       m_TileObjectToInstantiateIndex: 65535
@@ -2809,29 +2809,37 @@ Tilemap:
   m_TileAssetArray:
   - m_RefCount: 13
     m_Data: {fileID: 11400000, guid: 5ccde48515560444c91ed620171fb749, type: 2}
-  - m_RefCount: 0
-    m_Data: {fileID: 0}
-  - m_RefCount: 6
+  - m_RefCount: 1
+    m_Data: {fileID: 11400000, guid: 27554d4d72fd20b48ac184490a4a5b70, type: 2}
+  - m_RefCount: 4
     m_Data: {fileID: 11400000, guid: c6afa0e2ff4524b4fbd8cf7026bb0c16, type: 2}
   - m_RefCount: 98
     m_Data: {fileID: 11400000, guid: 0ad5efbcd02cadf47be61a56df1b1a8d, type: 2}
-  - m_RefCount: 4
+  - m_RefCount: 3
     m_Data: {fileID: 11400000, guid: ef4a4838e4a841148b0d6b9324f720ed, type: 2}
   - m_RefCount: 3
     m_Data: {fileID: 11400000, guid: 65fa2752ec593c8419ecf9f0ff13c936, type: 2}
+  - m_RefCount: 1
+    m_Data: {fileID: 11400000, guid: 675458968bf6f794ea53df1de1c1db8b, type: 2}
+  - m_RefCount: 1
+    m_Data: {fileID: 11400000, guid: 5633107519d326f419b09886e64c4707, type: 2}
   m_TileSpriteArray:
   - m_RefCount: 13
     m_Data: {fileID: 3612692646699882361, guid: 7e0ef28be2685674a90dc9df064e8d6c, type: 3}
-  - m_RefCount: 0
-    m_Data: {fileID: 0}
+  - m_RefCount: 1
+    m_Data: {fileID: -8207864411171441816, guid: 0a455e33cfdcfc14f8cc162c7e519361, type: 3}
   - m_RefCount: 98
     m_Data: {fileID: 4436436445598735973, guid: 817f66d5ae4a50644999c0868deadc88, type: 3}
-  - m_RefCount: 6
-    m_Data: {fileID: 3624218128299046730, guid: c06e28491be139a479c6c61620509a21, type: 3}
   - m_RefCount: 4
+    m_Data: {fileID: 3624218128299046730, guid: c06e28491be139a479c6c61620509a21, type: 3}
+  - m_RefCount: 3
     m_Data: {fileID: 3615900723022076319, guid: 87007365c6c9cc544bb8321b44145023, type: 3}
   - m_RefCount: 3
     m_Data: {fileID: 4545537346607864324, guid: 2fcff47a0892a85418b444f8eb3f0687, type: 3}
+  - m_RefCount: 1
+    m_Data: {fileID: 8782507543397000550, guid: 64203561b56e8ce4e949fe7d3f226094, type: 3}
+  - m_RefCount: 1
+    m_Data: {fileID: -2935727448404592781, guid: cb3ba1b870122434da1a5fbd6523cad3, type: 3}
   m_TileMatrixArray:
   - m_RefCount: 124
     m_Data:
@@ -2853,7 +2861,7 @@ Tilemap:
       e33: 1
   m_TileColorArray:
   - m_RefCount: 0
-    m_Data: {r: 5e-44, g: 5e-44, b: 5e-44, a: 5e-44}
+    m_Data: {r: 1.35632e-40, g: 1.35632e-40, b: 1.35632e-40, a: 1.35632e-40}
   - m_RefCount: 124
     m_Data: {r: 1, g: 1, b: 1, a: 1}
   m_TileObjectToInstantiateArray: []

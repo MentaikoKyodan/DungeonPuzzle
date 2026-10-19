@@ -44,7 +44,7 @@ public class ButtonSwitchScript : MonoBehaviour
 
     private void Refresh(bool playSE)
     {
-        bool pressedNow = Physics2D.OverlapCircle(transform.position, detectRadius, blockLayer);
+        bool pressedNow = Physics2D.OverlapPoint(transform.position, blockLayer);
 
         // 見た目・SE
         if (pressedNow != isPressed)
