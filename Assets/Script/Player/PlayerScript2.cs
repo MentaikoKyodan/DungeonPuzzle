@@ -341,8 +341,8 @@ public class PlayerScript2 : MonoBehaviour
             RestoreCrateDurability(record.blockCellsBefore, record.durabilityBefore);
 
             yield return null;
-            foreach (var button in FindObjectsByType<ButtonSwitchScript>(FindObjectsSortMode.None))
-                button.ForceRefresh();
+            foreach (var m in FindObjectsByType<ButtonTilemapManager>(FindObjectsSortMode.None))
+                m.ForceRefresh();
 
             if (animController != null)
                 animController.SetState(PlayerAnimationController.AnimState.Idle);
