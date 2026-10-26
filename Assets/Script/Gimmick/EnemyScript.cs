@@ -51,9 +51,25 @@ public class EnemyScript : MonoBehaviour
 
     private LineRenderer lineRenderer;
 
+
+
     // 前のフレームでプレイヤーを検知していたかどうか(検知の切り替わり判定用)
     private bool wasDetected = false;
+    private bool baseActive = true; // 初期状態(ボタンが押されてない時の状態)
 
+    public void Initialize(SensorAxis axis, bool invert, bool startActive = true)
+    {
+        sensorAxis = axis;
+        invertDirection = invert;
+        baseActive = startActive;
+    }
+
+    private bool IsActive()
+    {
+        bool toggled = CameraToggleManager.Instance != null
+                       && CameraToggleManager.Instance.IsToggled;
+        return baseActive != toggled; // XORで反転
+    }
     private void Awake()
     {
         // レイの発射地点が自分自身のコライダーの中にあるため、
@@ -119,6 +135,14 @@ public class EnemyScript : MonoBehaviour
 
     void Update()
     {
+        bool active = IsActive();
+        if (lineRenderer != null) lineRenderer.enabled = active;
+        if (!active)
+        {
+            wasDetected = false; // オンに戻った時に検知の切り替わりを正しく判定するため
+            return;
+        }
+
         Vector2 origin = transform.position;
         Vector2 direction = GetSensorDirection();
 

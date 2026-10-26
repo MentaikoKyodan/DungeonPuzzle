@@ -3,7 +3,11 @@ using UnityEngine.Tilemaps;
 
 public class CameraTilemapSpawner : MonoBehaviour
 {
-    [SerializeField] private Tilemap cameraTilemap;
+    [Header("Tilemap設定")]
+    [SerializeField] private Tilemap cameraTilemap;     // 最初からオン
+    [SerializeField] private Tilemap offCameraTilemap;  // 最初はオフ
+
+    [Header("生成設定")]
     [SerializeField] private GameObject cameraSensorPrefab;
     [SerializeField] private bool clearTilesAfterSpawn = false;
 
@@ -19,34 +23,35 @@ public class CameraTilemapSpawner : MonoBehaviour
 
     void Start()
     {
-        SpawnCameras();
+        SpawnCameras(cameraTilemap, true);
+        SpawnCameras(offCameraTilemap, false);
     }
 
-    private void SpawnCameras()
+    private void SpawnCameras(Tilemap tilemap, bool startActive)
     {
-        BoundsInt bounds = cameraTilemap.cellBounds;
+        if (tilemap == null) return;
 
-        foreach (var cell in bounds.allPositionsWithin)
+        foreach (var cell in tilemap.cellBounds.allPositionsWithin)
         {
-            TileBase tile = cameraTilemap.GetTile(cell);
+            TileBase tile = tilemap.GetTile(cell);
             if (tile == null) continue;
 
             EnemyScript.SensorAxis? axis = TileToAxis(tile);
             if (axis == null)
             {
-                Debug.LogWarning($"{cell} のタイルがどの向きにも登録されてない！Spawnerの参照を確認して");
+                Debug.LogWarning($"{cell} のタイルがどの向きにも登録されてない！");
                 continue;
             }
 
-            Vector3 worldPos = cameraTilemap.GetCellCenterWorld(cell);
+            Vector3 worldPos = tilemap.GetCellCenterWorld(cell);
             GameObject obj = Instantiate(cameraSensorPrefab, worldPos, Quaternion.identity);
 
             EnemyScript enemy = obj.GetComponent<EnemyScript>();
             if (enemy != null)
-                enemy.Initialize(axis.Value, false);
+                enemy.Initialize(axis.Value, false, startActive);
 
             if (clearTilesAfterSpawn)
-                cameraTilemap.SetTile(cell, null);
+                tilemap.SetTile(cell, null);
         }
     }
 
