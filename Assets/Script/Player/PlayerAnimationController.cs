@@ -44,12 +44,26 @@ public class PlayerAnimationController : MonoBehaviour
     [SerializeField] private AnimClip2D charge2BackAnim;
     [SerializeField] private AnimClip2D punchBackAnim;
 
-    private bool facingBack;
+    [Header("正面向き(下移動用) 未設定なら通常アニメで代用")]
+    [SerializeField] private AnimClip2D idleFrontAnim;
+    [SerializeField] private AnimClip2D pushFrontAnim;
+    [SerializeField] private AnimClip2D charge1FrontAnim;
+    [SerializeField] private AnimClip2D charge2FrontAnim;
+    [SerializeField] private AnimClip2D punchFrontAnim;
 
+    public enum FacingDir { Side, Back, Front }
+    private FacingDir facingDir = FacingDir.Front;
+
+    // 既存の呼び出しを壊さないために残す
     public void SetFacingBack(bool back)
     {
-        if (facingBack == back) return;
-        facingBack = back;
+        SetDirection(back ? FacingDir.Back : FacingDir.Side);
+    }
+
+    public void SetDirection(FacingDir dir)
+    {
+        if (facingDir == dir) return;
+        facingDir = dir;
         RefreshClip();
     }
 
@@ -132,18 +146,22 @@ public class PlayerAnimationController : MonoBehaviour
 
     private AnimClip2D GetClip(AnimState state)
     {
-        AnimClip2D front, back;
+        AnimClip2D side, back, front;
         switch (state)
         {
-            case AnimState.Push: front = pushAnim; back = pushBackAnim; break;
-            case AnimState.Charge1: front = charge1Anim; back = charge1BackAnim; break;
-            case AnimState.Charge2: front = charge2Anim; back = charge2BackAnim; break;
-            case AnimState.Punch: front = punchAnim; back = punchBackAnim; break;
-            default: front = idleAnim; back = idleBackAnim; break;
+            case AnimState.Push: side = pushAnim; back = pushBackAnim; front = pushFrontAnim; break;
+            case AnimState.Charge1: side = charge1Anim; back = charge1BackAnim; front = charge1FrontAnim; break;
+            case AnimState.Charge2: side = charge2Anim; back = charge2BackAnim; front = charge2FrontAnim; break;
+            case AnimState.Punch: side = punchAnim; back = punchBackAnim; front = punchFrontAnim; break;
+            default: side = idleAnim; back = idleBackAnim; front = idleFrontAnim; break;
         }
 
-        if (facingBack && back != null && back.frames != null && back.frames.Length > 0)
-            return back;
-        return front;
+        AnimClip2D dirClip = null;
+        if (facingDir == FacingDir.Back) dirClip = back;
+        else if (facingDir == FacingDir.Front) dirClip = front;
+
+        if (dirClip != null && dirClip.frames != null && dirClip.frames.Length > 0)
+            return dirClip;
+        return side;
     }
 }

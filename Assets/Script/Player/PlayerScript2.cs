@@ -83,7 +83,12 @@ public class PlayerScript2 : MonoBehaviour
     private bool isPlayerMoving = false; // プレイヤーが移動中か
     private bool isBlockMoving = false;  // ブロックが移動中か
     private Vector3 currentPosition;
+    private Vector3Int facingDirection = Vector3Int.right; // 今向いてる方向
 
+    void Start()
+    {
+        FaceDirection(Vector3Int.right);
+    }
     void Awake()
     {
         particleObj.SetActive(false);
@@ -129,127 +134,45 @@ public class PlayerScript2 : MonoBehaviour
 
     void Update()
     {
-        // 画面遷移中(アイリス演出中を含む)は一切の入力を受け付けない
         if (ScreenTransitionManager.Instance != null && ScreenTransitionManager.Instance.IsInputLocked)
             return;
 
         HandleUndo();
-        //何よりも最優先で溜め入力を監視する（移動中であっても溜められる！）
         HandleCharge();
-        // プレイヤー自身、またはブロックが移動中なら、新しい入力を受け付けない
         if (isPlayerMoving || isBlockMoving) return;
 
-        // 押された方向キーを判別する（キーボード＋コントローラー対応）
-        Vector3Int direction = GetDirectionInput();
-
-        // キーが押された場合の処理
-        if (direction != Vector3Int.zero)
+        // パンチ入力（RT or Enter）
+        if (IsPunchPressed())
         {
-            if (animController != null)
-            {
-                if (direction == Vector3Int.right)
-                {
-                    animController.SetFacing(true);
-                    animController.SetFacingBack(false);
-                }
-                else if (direction == Vector3Int.left)
-                {
-                    animController.SetFacing(false);
-                    animController.SetFacingBack(false);
-                }
-                else if (direction == Vector3Int.up)
-                {
-                    animController.SetFacingBack(true);
-                }
-                else // down
-                {
-                    animController.SetFacingBack(false);
-                }
-            }
-
-            Vector3Int currentCell = targetGrid.WorldToCell(transform.position);
-            Vector3Int targetCell = currentCell + direction;
-            Vector3 targetPosition = targetGrid.GetCellCenterWorld(targetCell);
-
-            // 【検知1】1マス先がただの壁なら進めない
-            if (Physics2D.OverlapCircle(targetPosition, 0.4f, obstacleLayer))
-            {
-                ResetCharge(); // 壁にぶつかったら溜めリセット
-                if (animController != null)
-                    animController.SetState(PlayerAnimationController.AnimState.Idle);
-                return;
-            }
-
-            // 【検知2】1マス先がブロックだった場合
-            if (Physics2D.OverlapCircle(targetPosition, 0.4f, blockLayer))
-            {
-                int maxPushable = chargeLevel + 1;
-                List<Vector3Int> connectedBlocks = GetConnectedBlocks(targetCell, direction);
-                int chargeLevelAtPunch = chargeLevel; // ResetChargeで消える前に確保しとく
-
-                Debug.Log($"[座標チェック] targetCell={targetCell}, connectedBlocks内容={string.Join(",", connectedBlocks)}");
-
-                if (connectedBlocks.Count > maxPushable)
-                {
-                    Debug.Log($"ブロックが {connectedBlocks.Count} 個連なっています。パワーが足りません！");
-                    ResetCharge();
-                    if (animController != null)
-                        animController.SetState(PlayerAnimationController.AnimState.Idle);
-                    return;
-                }
-
-                int pushDistance = Mathf.Max(1, (chargeLevel + 1) / connectedBlocks.Count);
-                int actualPushDistance = GetActualPushDistance(connectedBlocks, direction, pushDistance);
-
-                if (actualPushDistance <= 0)
-                {
-                    Debug.Log("ブロックの先が塞がっているので押せません！");
-
-                    ResetCharge();
-                    if (animController != null)
-                        animController.SetState(PlayerAnimationController.AnimState.Idle);
-                    return;
-                }
-
-                List<TileBase> tilesBeforePush = new List<TileBase>();
-                foreach (var cell in connectedBlocks)
-                    tilesBeforePush.Add(blockTilemap.GetTile(cell)); // ダメージ適用前＝殴る前の見た目を保存
-
-                List<int> durabilityBeforePush = ApplyCrateDamage(connectedBlocks, chargeLevelAtPunch);
-
-                historyStack.Push(new MoveRecord
-                {
-                    isBlockPush = true,
-                    blockCellsBefore = new List<Vector3Int>(connectedBlocks),
-                    pushDirection = direction,
-                    pushDistance = actualPushDistance,
-                    blockTiles = tilesBeforePush,
-                    durabilityBefore = durabilityBeforePush
-                });
-
-                StartCoroutine(PunchAndPushRoutine(connectedBlocks, direction, actualPushDistance));
-
-                ResetCharge();
-                return;
-            }
-            // Undo用に「移動前」の位置を記録
-            historyStack.Push(new MoveRecord
-            {
-                isBlockPush = false,
-                playerPosBefore = transform.position
-            });
-            // 1マス先が「壁」でも「ブロック」でもない（ただの空き地）
-            if (chargeLevel > 0)
-            {
-                // 溜めた状態で移動しようとしたら、何もなくても攻撃だけは出す
-                StartCoroutine(PunchThenMoveRoutine(targetPosition));
-                ResetCharge();
-            }
-            else
-            {
-                StartCoroutine(MovePlayerRoutine(targetPosition));
-            }
+            TryPunch();
+            return;
         }
+
+        Vector3Int direction = GetDirectionInput();
+        if (direction == Vector3Int.zero) return;
+
+        // まず向きだけ変える（壁でもブロックでも向く）
+        FaceDirection(direction);
+
+        // 溜め中は向きだけ変えて、移動はしない
+        if (chargeLevel > 0) return;
+
+        Vector3Int currentCell = targetGrid.WorldToCell(transform.position);
+        Vector3Int targetCell = currentCell + direction;
+        Vector3 targetPosition = targetGrid.GetCellCenterWorld(targetCell);
+
+        // 壁なら進めない
+        if (Physics2D.OverlapCircle(targetPosition, 0.4f, obstacleLayer)) return;
+
+        // ブロックなら向くだけで終わり（殴らない）
+        if (Physics2D.OverlapCircle(targetPosition, 0.4f, blockLayer)) return;
+
+        historyStack.Push(new MoveRecord
+        {
+            isBlockPush = false,
+            playerPosBefore = transform.position
+        });
+        StartCoroutine(MovePlayerRoutine(targetPosition));
     }
 
     //キーボードとコントローラーの入力をまとめて判定する関数
@@ -503,38 +426,128 @@ public class PlayerScript2 : MonoBehaviour
         transform.position = targetPos;
         isPlayerMoving = false;
     }
-
-    // --- 溜めてる時に空振りで前進する用（殴ってから移動） ---
-    private IEnumerator PunchThenMoveRoutine(Vector3 targetPos)
+    private void FaceDirection(Vector3Int dir)
     {
-        isPlayerMoving = true; // 殴ってる間も入力ブロックしておく
+        facingDirection = dir;
+        if (animController == null) return;
+
+        if (dir == Vector3Int.right)
+        {
+            animController.SetFacing(true);
+            animController.SetDirection(PlayerAnimationController.FacingDir.Side);
+        }
+        else if (dir == Vector3Int.left)
+        {
+            animController.SetFacing(false);
+            animController.SetDirection(PlayerAnimationController.FacingDir.Side);
+        }
+        else if (dir == Vector3Int.up)
+            animController.SetDirection(PlayerAnimationController.FacingDir.Back);
+        else
+            animController.SetDirection(PlayerAnimationController.FacingDir.Front);
+    }
+
+    private bool IsPunchPressed()
+    {
+        if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)) return true;
+        if (Gamepad.current != null && Gamepad.current.rightTrigger.wasPressedThisFrame) return true;
+        return false;
+    }
+
+    private void TryPunch()
+    {
+        Vector3Int direction = facingDirection;
+        Vector3Int currentCell = targetGrid.WorldToCell(transform.position);
+        Vector3Int targetCell = currentCell + direction;
+        Vector3 targetPosition = targetGrid.GetCellCenterWorld(targetCell);
+
+        // 目の前にブロックが無ければ空振り
+        if (!Physics2D.OverlapCircle(targetPosition, 0.4f, blockLayer))
+        {
+            StartCoroutine(PunchWhiffRoutine());
+            ResetCharge();
+            return;
+        }
+
+        // ↓ここから下は元の【検知2】の中身をそのまま移植
+        int maxPushable = chargeLevel + 1;
+        List<Vector3Int> connectedBlocks = GetConnectedBlocks(targetCell, direction);
+        int chargeLevelAtPunch = chargeLevel;
+
+        if (connectedBlocks.Count > maxPushable)
+        {
+            Debug.Log($"ブロックが {connectedBlocks.Count} 個連なっています。パワーが足りません！");
+            ResetCharge();
+            if (animController != null)
+                animController.SetState(PlayerAnimationController.AnimState.Idle);
+            return;
+        }
+
+        int pushDistance = Mathf.Max(1, (chargeLevel + 1) / connectedBlocks.Count);
+        int actualPushDistance = GetActualPushDistance(connectedBlocks, direction, pushDistance);
+
+        if (actualPushDistance <= 0)
+        {
+            Debug.Log("ブロックの先が塞がっているので押せません！");
+            ResetCharge();
+            if (animController != null)
+                animController.SetState(PlayerAnimationController.AnimState.Idle);
+            return;
+        }
+
+        List<TileBase> tilesBeforePush = new List<TileBase>();
+        foreach (var cell in connectedBlocks)
+            tilesBeforePush.Add(blockTilemap.GetTile(cell));
+
+        List<int> durabilityBeforePush = ApplyCrateDamage(connectedBlocks, chargeLevelAtPunch);
+
+        historyStack.Push(new MoveRecord
+        {
+            isBlockPush = true,
+            blockCellsBefore = new List<Vector3Int>(connectedBlocks),
+            pushDirection = direction,
+            pushDistance = actualPushDistance,
+            blockTiles = tilesBeforePush,
+            durabilityBefore = durabilityBeforePush
+        });
+
+        StartCoroutine(PunchAndPushRoutine(connectedBlocks, direction, actualPushDistance));
+        ResetCharge();
+    }
+
+    // 空振りパンチ（移動はしない）
+    private IEnumerator PunchWhiffRoutine()
+    {
+        isPlayerMoving = true; // 入力ブロック用
 
         if (animController != null)
         {
-            bool impactHappened = false;
+            bool finished = false;
             System.Action onImpact = () =>
             {
-                impactHappened = true;
-                //殴った瞬間にSE（空振りでも鳴らす）
                 if (SEManager.Instance != null)
                     SEManager.Instance.PlaySE(punchSound);
             };
+            System.Action onFinished = () => finished = true;
 
             animController.OnAnimImpact += onImpact;
+            animController.OnNonLoopAnimFinished += onFinished;
             animController.SetState(PlayerAnimationController.AnimState.Punch);
 
-            while (!impactHappened)
+            float timeout = 1.5f; // アニメが終わらない時の保険
+            while (!finished && timeout > 0f)
+            {
+                timeout -= Time.deltaTime;
                 yield return null;
+            }
 
             animController.OnAnimImpact -= onImpact;
+            animController.OnNonLoopAnimFinished -= onFinished;
+            animController.SetState(PlayerAnimationController.AnimState.Idle);
         }
 
-        yield return StartCoroutine(MovePlayerRoutine(targetPos)); // これがisPlayerMovingをfalseに戻してくれる
-
-        if (animController != null)
-            animController.SetState(PlayerAnimationController.AnimState.Idle);
+        isPlayerMoving = false;
     }
-
     // --- 連なった複数のブロックを同時に滑らかに動かす処理 ---
     private IEnumerator MoveMultipleBlocksRoutine(List<Vector3Int> blockList, Vector3Int direction, int pushDistance)
     {

@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 9866a83bee8f67b43b1bc176342a4326
+guid: 7e91abb2531867e4fae654860d238586
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 2053774833273540077
-    second: Dairiseki_Tile_0
+      213: 516732531118158399
+    second: Dairiseki_Tile4_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -100,7 +100,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Dairiseki_Tile_0
+      name: Dairiseki_Tile4_0
       rect:
         serializedVersion: 2
         x: 0
@@ -115,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: ded08e95459708c10800000000000000
-      internalID: 2053774833273540077
+      spriteID: f32bf21df7dcb2700800000000000000
+      internalID: 516732531118158399
       vertices: []
       indices: 
       edges: []
@@ -135,7 +135,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Dairiseki_Tile_0: 2053774833273540077
+      Dairiseki_Tile4_0: 516732531118158399
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
