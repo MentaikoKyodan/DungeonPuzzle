@@ -50,6 +50,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/MainStages/Stage9.unity
     guid: ae088d9a8d2cba6469c66deb957e703b
+  - enabled: 1
+    path: Assets/Scenes/EndingScene.unity
+    guid: d57eb59e684975844b0bf75a605818d9
   - enabled: 0
     path: Assets/Scenes/MainStages/Stage3.unity
     guid: ee4459f2c393a064c80ea7a1d44ca9ca

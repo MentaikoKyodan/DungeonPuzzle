@@ -33,7 +33,7 @@ public class BGMManager : MonoBehaviour
 
     private void Start()
     {
-        // ★まだ再生してなければ再生開始
+        // まだ再生してなければ再生開始
         if (!audioSource.isPlaying)
         {
             audioSource.Play();
@@ -45,5 +45,17 @@ public class BGMManager : MonoBehaviour
     {
         volume = Mathf.Clamp01(newVolume);
         audioSource.volume = volume;
+    }
+    // エンディングなどで止めたい時用
+    public void StopBGM()
+    {
+        audioSource.Stop();
+    }
+
+    // 止めたBGMをまた流したい時用(最初から再生される)
+    public void PlayBGM()
+    {
+        if (!audioSource.isPlaying)
+            audioSource.Play();
     }
 }
